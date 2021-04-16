@@ -1,7 +1,7 @@
 FROM    node:latest
 LABEL   maintainer="Louis Ross <louis.ross@gmail.com"
 
-ARG     MYDIR=/home/spiking-model-client
+ARG     MYDIR=/home/spiking-model-control
 WORKDIR ${MYDIR}
 
 COPY    install-deps ${MYDIR}/
