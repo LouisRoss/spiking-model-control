@@ -1,0 +1,10 @@
+#!/bin/bash
+echo $(pwd)
+docker container run \
+-it \
+--rm \
+--name=spiking-model-client \
+-v "$(pwd)":/home/spiking-model-client \
+-p 5000:5000 \
+louisross/spiking-model-client:1.0 \
+bash
