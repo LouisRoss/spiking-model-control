@@ -40,38 +40,3 @@ connectForm.addEventListener('submit', function(e) {
   });
 });
 
-form.addEventListener('submit', function(e) {
-    e.preventDefault();
-  });
-  
-  function unused() {
-    /*
-      fetch('http://localhost:5000/connection', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(connectReq)
-      })
-      .then(res => {
-          if (res.ok) {
-              var item = document.createElement('li');
-              item.textContent = msg;
-              messages.appendChild(item);
-          } else {
-            var item = document.createElement('li');
-            item.textContent = "Error response"
-            messages.appendChild(item);
-          }
-      })
-      .then(data => {
-        console.log(data);
-      })
-      .catch(error => {
-        var item = document.createElement('li');
-        item.textContent = "Error"
-        messages.appendChild(item);
-        console.log("Error");
-      });
-    */
-}
