@@ -7,7 +7,7 @@ var input = document.getElementById('input');
 
 connectForm.addEventListener('submit', function(e) {
   e.preventDefault();
-  var connectReq = { 'server': servers.value };
+  var connectReq = { 'request': 'connect', 'server': servers.value };
   console.log(`request: ${JSON.stringify(connectReq)}`)
 
   fetch('http://localhost:5000/connection', {
@@ -21,21 +21,16 @@ connectForm.addEventListener('submit', function(e) {
       if (res.ok) {
           return res.json();
         } else {
-          var item = document.createElement('li');
-          item.textContent = "Error response"
-          messages.appendChild(item);
+          messages.value += '\n' + "Error response";
         }
       })
       .then(data => {
         console.log(data);
-        var item = document.createElement('li');
-        item.textContent = JSON.stringify(data);
-        messages.appendChild(item);
+        messages.value += '\n' + JSON.stringify(data);
+        window.scrollTo(0, document.body.scrollHeight);
   })
   .catch(error => {
-    var item = document.createElement('li');
-    item.textContent = "Error"
-    messages.appendChild(item);
+    messages.value += '\n' + `Error ${error}`;
     console.log(`Error ${error}`);
   });
 });

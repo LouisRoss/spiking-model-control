@@ -5,6 +5,9 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const net = require('net');
 
+const singleton = require('./status-poller');
+const controller = singleton.getInstance(); 
+
 const app = express();
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 
@@ -12,9 +15,10 @@ const router = express.Router();
 router.post('/:connection', (req, res) => {
   const { server } = req.body;
 
-  //const foundUser = users.find((user) => user.id === id);
   console.log(`Found request ${JSON.stringify(req.body)}`)
-  var response = {response: "Ok"};
+  controller.parseRequest(req.body);
+
+  var response = {response: "Ok", instance: controller.count};
   res.body = response;
   res.send(JSON.stringify(response));
   console.log(JSON.stringify(response));
