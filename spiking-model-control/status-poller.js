@@ -48,11 +48,14 @@ class PrivateSingleton {
     // When receive server send back data.
     client.on('data', function (data) {
       if (data) {
-        console.log('Server return data : ' + data);
-        var response = JSON.parse(data);
-        if (response.Query.Query == 'Status') {
-          this.status = JSON.stringify(response.Response);
-          console.log('Capturing Status as string: ' + this.status);
+        var fullResponse = JSON.stringify(data).trim();
+        if (fullResponse && fullResponse.length > 0) {
+          console.log('Server return data : ' + fullResponse);
+          var response = JSON.parse(data);
+          if (response.Query.Query == 'Status') {
+            this.status = JSON.stringify(response.Response);
+            console.log('Capturing Status as string: ' + this.status);
+          }
         }
       }
     });
