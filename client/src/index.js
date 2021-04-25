@@ -1,87 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './App.css';
-//'use strict';
 
-//var connectForm = document.getElementById('connectForm');
-/*
-
-var form = document.getElementById('form');
-var input = document.getElementById('input');
-
-connectForm.addEventListener('submit', function(e) {
-  e.preventDefault();
-  var connectReq = { 'request': 'connect', 'server': servers.value };
-  console.log(`request: ${JSON.stringify(connectReq)}`)
-  
-  fetch('http://localhost:5000/connection', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(connectReq)
-  })
-  .then(res => {
-    if (res.ok) {
-      return res.json();
-    } else {
-      messages.value += '\n' + "Error response";
-    }
-  })
-  .then(data => {
-    console.log(data);
-    messages.value += '\n' + JSON.stringify(data);
-    window.scrollTo(0, document.body.scrollHeight);
-  })
-  .catch(error => {
-    messages.value += '\n' + `Error ${error}`;
-    console.log(`Error ${error}`);
-  });
-});
-*/
-
-
-
-//const e = React.createElement;
-/*
-class ConnectButton extends React.Component {
-  
-}
-
-class DisconnectButton extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { disconnected: false };
-  }
-  
-  render() {
-    if (this.state.disconnected) {
-      return 'You are disconnected.';
-    }
-    
-    return e(
-      'button',
-      { onClick: () => this.setState({ disconnected: true }) },
-      'Disconnect'
-      );
-    }
-  }
-  */
- 
  /*
  function ConnectDisconnectButton(props) {
-   return (
-     <button className="connect-disconnect" onClick={props.onClick}>
-     {props.value}
-     </button>
-     );
-    }
-    */
+  return (
+    <button id="connectButton" className="connect-disconnect" onClick={props.onClick}>
+      {props.value}
+    </button>
+  );
+}
+*/
    
-   class ConnectDisconnectButton extends React.Component {
-     render() {
-       return (
-         <button id="connectButton" className="connect-disconnect" onClick={this.props.onClick}>
+class ConnectDisconnectButton extends React.Component {
+  render() {
+    return (
+      <button id="connectButton" className="connect-disconnect" onClick={this.props.onClick}>
         {this.props.value}
       </button>
     );
@@ -166,22 +100,9 @@ class ControlPanel extends React.Component {
           <label htmlFor="">a</label>
         </section>
       </div>
-
-    /*
-      <div className="game">
-        <div className="game-board">
-          <Board squares={current.squares} onClick={(i) => this.handleClick(i)} />
-        </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
-        </div>
-      </div>
-      */
     );
   }
 }
-
 
 // ========================================
 
@@ -190,4 +111,3 @@ ReactDOM.render(
     document.getElementById('root')
   );
 
-  
