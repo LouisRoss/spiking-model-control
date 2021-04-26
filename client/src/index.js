@@ -76,10 +76,10 @@ class ControlPanel extends React.Component {
 
   render() {
     return (
-      <div className="mainbody">
+      <section className="mainbody">
         <section className="leftpane">
         <div className="connectbar">
-          <div className="connectionPanel">
+          <div id="connectionPanel">
             <ConnectDisconnectButton value="Connnect" onClick={() => this.handleConnectionClick(true)}/>
             <select name="servers" id="servers">
               <option value="192.168.1.142">192.168.1.142</option>
@@ -99,7 +99,7 @@ class ControlPanel extends React.Component {
         <section className="rightpane">
           <label htmlFor="">a</label>
         </section>
-      </div>
+      </section>
     );
   }
 }

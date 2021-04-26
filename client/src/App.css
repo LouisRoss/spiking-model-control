@@ -63,7 +63,7 @@ div.messagebar {
     backdrop-filter: blur(10px);
 }
 
-#connectForm > button { 
+#connectButton { 
     background: #333; 
     border: none; 
     padding: 0 1rem; 
@@ -73,7 +73,7 @@ div.messagebar {
     color: #fff;
 }
 
-#connectForm > select {
+#servers {
     margin: 0.25rem; 
 }
 
@@ -89,14 +89,6 @@ div.messages {
     
     resize: none;
     width: 100%;
-}
-
-#messages > li { 
-    padding: 0.5rem 1rem; 
-}
-
-#messages > li:nth-child(odd) { 
-    background: #efefef; 
 }
 
 /* FOOTER */
