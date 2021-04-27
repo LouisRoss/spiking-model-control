@@ -24,19 +24,9 @@ class RequestResponder {
     return { response: "Invalid request format" };
   }
 
-  handleStatusRequest(req) {
-    if (req && req.request) {
-      if (req.request == 'status') {
-        var status = this.controller.getStatus();
-        return { response: "Ok", status: JSON.stringify(status) };
-      }
-      else {
-        console.log(`Unrecognized status request ${req.request}`);
-        return { response: `Unrecognized status request ${req.request}` };
-      }
-    }
-
-    return { response: "Invalid request format" };
+  handleStatusRequest() {
+    var status = this.controller.getStatus();
+    return { response: "Ok", status: status };
   }
 
 }

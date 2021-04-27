@@ -23,8 +23,23 @@ app.use(cors());
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 const router = express.Router();
+
+router.get('/:command', (req, res) => {
+  console.log(`GET request parameters: ${JSON.stringify(req.params)}`);
+  const { command } = req.params;
+
+  var response = { response: `Unrecognized command URL ${command}` };
+  if (command == 'status') {
+    console.log("Found status request ");
+    var response = responder.handleStatusRequest()
+  }
+
+  res.json(response);
+  console.log(`GET response: ${JSON.stringify(response)}`);
+});
+
 router.post('/:command', /*cors(),*/ (req, res) => {
-  console.log(`Request parameters: ${JSON.stringify(req.params)}`);
+  console.log(`POST request parameters: ${JSON.stringify(req.params)}`);
   const { command } = req.params;
 
   var response = { response: `Unrecognized command URL ${command}` };
@@ -32,13 +47,9 @@ router.post('/:command', /*cors(),*/ (req, res) => {
     console.log("Found connection request " + JSON.stringify(req.body));
     var response = responder.handleConnectionRequest(req.body)
   }
-  else if (command == "status") {
-    console.log("Found status request " + JSON.stringify(req.body));
-    var response = responder.handleStatusRequest(req.body)
-  }
 
   res.json(response);
-  console.log(`Response: ${JSON.stringify(response)}`);
+  console.log(`POST response: ${JSON.stringify(response)}`);
 });
 
 var server = http.createServer(app);

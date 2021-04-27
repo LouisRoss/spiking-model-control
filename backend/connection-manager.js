@@ -3,37 +3,14 @@ const net = require('net');
 client = null;
 const queryStatus = { Query: "Status" };
 
-status = {};
+status = { connected: false };
 
 
 class PrivateSingleton {
   constructor() {
-
     setInterval(this.statusPoll, 1500);
   }
-  /*
-  parseRequest(req) {
-    if (req && req.request) {
-      if (req.request == 'connect') {
-        this.attemptConnection(req.server);
-        return { response: "Ok" };
-      }
-      else if (req.request == 'disconnect') {
-        if (client) {
-          client.destroy();
-          client = null;
-        }
-        return { response: "Ok" };
-      }
-      else {
-        console.log(`Unrecognized request ${req.request}`);
-        return { response: `Unrecognized request ${req.request}` };
-      }
-    }
-    
-    return { response: "Invalid request format" };
-  }
-  */
+
   statusPoll() {
     if (client) {
       console.log('Polling for status');
@@ -91,9 +68,14 @@ class PrivateSingleton {
         if (fullResponse && fullResponse.length > 0) {
           console.log('Server return data : ' + fullResponse);
           var response = JSON.parse(data);
-          if (response.Query.Query == 'Status') {
-            status = { ...status, ...response.Response };
-            console.log('Capturing Status: ' + JSON.stringify(status));
+          if (response.Error) {
+            status = { ...status, ...response.Error };
+          }
+          else if (response.Query) {
+            if (response.Query.Query == 'Status') {
+              status = { ...status, ...response.Response };
+              console.log('Capturing Status: ' + JSON.stringify(status));
+            }
           }
         }
       }
