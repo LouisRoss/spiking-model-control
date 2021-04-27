@@ -1,23 +1,17 @@
 const net = require('net');
-var client = null;
 
+client = null;
 const queryStatus = { Query: "Status" };
 
-function statusPoll() {
-  if (client) {
-    console.log('Polling for status');
-    client.write(JSON.stringify(queryStatus));
-  }
-}
-
-setInterval(statusPoll, 1500);
+status = {};
 
 
 class PrivateSingleton {
   constructor() {
-    this.status = '';
-  }
 
+    setInterval(this.statusPoll, 1500);
+  }
+  /*
   parseRequest(req) {
     if (req && req.request) {
       if (req.request == 'connect') {
@@ -36,15 +30,48 @@ class PrivateSingleton {
         return { response: `Unrecognized request ${req.request}` };
       }
     }
-
+    
     return { response: "Invalid request format" };
+  }
+  */
+  statusPoll() {
+    if (client) {
+      console.log('Polling for status');
+      client.write(JSON.stringify(queryStatus));
+    }
+  }
+  
+  isConnected() {
+    return client != null;
+  }
+
+  disconnect() {
+    if (this.isConnected()) {
+      status.connected = false;
+      client.destroy();
+      client = null;
+
+      return true;
+    }
+
+    return false;
+  }
+
+  getStatus() {
+    console.log(`Getting current status: ${JSON.stringify(status)}`);
+    return status;
   }
 
   attemptConnection(hostName)
   {
+    if (this.isConnected()) {
+      return false;
+    }
+
     console.log(`Attemtpting connection with http://${hostName}:8000`);
     var option = {port:8000, host:hostName};
     client = net.createConnection(option, function () {
+      status.connected = true;
       console.log('Connection local address : ' + client.localAddress + ":" + client.localPort);
       console.log('Connection remote address : ' + client.remoteAddress + ":" + client.remotePort);
     });
@@ -52,20 +79,21 @@ class PrivateSingleton {
     client.setTimeout(10000);
     client.setEncoding('utf8');
 
-    this.setupClient();
+    return this.setupClient();
   }
 
   setupClient() {
     // When receive server send back data.
     client.on('data', function (data) {
       if (data) {
+        status.connected = true;
         var fullResponse = JSON.stringify(data).trim();
         if (fullResponse && fullResponse.length > 0) {
           console.log('Server return data : ' + fullResponse);
           var response = JSON.parse(data);
           if (response.Query.Query == 'Status') {
-            this.status = JSON.stringify(response.Response);
-            console.log('Capturing Status as string: ' + this.status);
+            status = { ...status, ...response.Response };
+            console.log('Capturing Status: ' + JSON.stringify(status));
           }
         }
       }
@@ -74,21 +102,20 @@ class PrivateSingleton {
     // When connection disconnected.
     client.on('end', function () {
         console.log('Client socket disconnect. ');
-        client.destroy();
-        client = null;
+        this.disconnect();
     });
 
     client.on('timeout', function () {
         console.log('Client connection timeout. ');
-        client.destroy();
-        client = null;
+        this.disconnect();
     });
 
     client.on('error', function (err) {
         console.error(JSON.stringify(err));
-        client.destroy();
-        client = null;
+        this.disconnect();
     });
+
+    return true;
   }
 }
 

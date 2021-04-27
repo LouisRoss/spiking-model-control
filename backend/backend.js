@@ -12,26 +12,33 @@ const cors_conf = {
   methods: ["POST"],
 };
 
-const singleton = require('./status-poller');
-const controller = singleton.getInstance(); 
+const requestResponder = require('./request-responder');
+var responder = new requestResponder();
 
 const app = express();
 //app.use(cors(cors_conf));
 //app.options('/:connection', cors());
 app.use(cors());
 
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 const router = express.Router();
-router.post('/:connection', /*cors(),*/ (req, res) => {
-  const { server } = req.body;
+router.post('/:command', /*cors(),*/ (req, res) => {
+  console.log(`Request parameters: ${JSON.stringify(req.params)}`);
+  const { command } = req.params;
 
-  console.log(`Found request ${JSON.stringify(req.body)}`)
-  var response = controller.parseRequest(req.body)
+  var response = { response: `Unrecognized command URL ${command}` };
+  if (command == 'connection') {
+    console.log("Found connection request " + JSON.stringify(req.body));
+    var response = responder.handleConnectionRequest(req.body)
+  }
+  else if (command == "status") {
+    console.log("Found status request " + JSON.stringify(req.body));
+    var response = responder.handleStatusRequest(req.body)
+  }
 
-  res.body = response;
-  res.send(JSON.stringify(response));
-  console.log(JSON.stringify(response));
+  res.json(response);
+  console.log(`Response: ${JSON.stringify(response)}`);
 });
 
 var server = http.createServer(app);

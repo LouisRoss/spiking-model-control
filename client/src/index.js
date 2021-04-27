@@ -11,7 +11,56 @@ import './App.css';
   );
 }
 */
-   
+
+setInterval(statusPoll, 500);
+
+function statusPoll() {
+  // TODO - RequestResponse
+}
+
+const baseURL = 'http://localhost:5000/';
+
+function ConnectionRequestResponse(request, callback) {
+  RequestResponse('connection', request, 'POST', callback);
+}
+
+function StatusRequestResponse(request, callback) {
+  RequestResponse('status', request, 'GET', callback);
+}
+
+function RequestResponse(resource, request, method, callback) {
+  var messages = document.getElementById('messages');
+
+  console.log(`request: ${JSON.stringify(request)}`)
+  
+  fetch(URL + resource, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request)
+  })
+  .then(res => {
+    if (res.ok) {
+      return res.json();
+    } else {
+      messages.value += "\nError response";
+    }
+  })
+  .then(data => {
+    console.log(data);
+    messages.value += '\n' + JSON.stringify(data);
+    window.scrollTo(0, document.body.scrollHeight);
+    callback(data);
+  })
+  .catch(error => {
+    messages.value += `\nError ${error}`;
+    console.log(`Error ${error}`);
+  });
+}
+
+
+
 class ConnectDisconnectButton extends React.Component {
   render() {
     return (
@@ -32,6 +81,7 @@ class ControlPanel extends React.Component {
   }
   
   handleConnectionClick(connect) {
+    /*
     var servers = document.getElementById('servers');
     var messages = document.getElementById('messages');
 
@@ -66,12 +116,58 @@ class ControlPanel extends React.Component {
       messages.value += `\nError ${error}`;
       console.log(`Error ${error}`);
     });
+    */
+    var servers = document.getElementById('servers');
+
+    let connectReq;
+    if (connect) {
+      connectReq = { 'request': 'connect', 'server': servers.value };
+    } else {
+      connectReq = { 'request': 'disconnect', 'server': '' };
+    }
+    RequestResponse(connectReq, 'POST', (data) => { });
   
     // TODO send message to node backend.
     console.log(`Connected: ${connect}`)
     this.setState({
       connected: connect,
     });
+  }
+
+  handleStatusClick() {
+    /*
+    var messages = document.getElementById('messages');
+
+    var statusReq = { 'request': 'status' };
+
+    console.log(`request: ${JSON.stringify(statusReq)}`)
+    
+    fetch('http://localhost:5000/status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(statusReq)
+    })
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        messages.value += "\nError response";
+      }
+    })
+    .then(data => {
+      console.log(data);
+      messages.value += '\n' + JSON.stringify(data);
+      window.scrollTo(0, document.body.scrollHeight);
+    })
+    .catch(error => {
+      messages.value += `\nError ${error}`;
+      console.log(`Error ${error}`);
+    });
+    */
+
+    RequestResponse({ 'request': 'status' }, 'POST', (data) => { });
   }
 
   render() {
@@ -86,6 +182,7 @@ class ControlPanel extends React.Component {
               <option value="127.0.0.1">127.0.0.1</option>
             </select>
             <ConnectDisconnectButton value="Disconnnect" onClick={() => this.handleConnectionClick(false)}/>
+            <ConnectDisconnectButton value="Status" onClick={() => this.handleStatusClick()}/>
           </div>
 
           <div className="messagebar">
