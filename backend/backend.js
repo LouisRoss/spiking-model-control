@@ -25,31 +25,35 @@ app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 const router = express.Router();
 
 router.get('/:command', (req, res) => {
-  console.log(`GET request parameters: ${JSON.stringify(req.params)}`);
   const { command } = req.params;
 
-  var response = { response: `Unrecognized command URL ${command}` };
+  var response = { response: `Unrecognized GET command resource ${command}` };
   if (command == 'status') {
-    console.log("Found status request ");
     var response = responder.handleStatusRequest()
   }
 
   res.json(response);
-  console.log(`GET response: ${JSON.stringify(response)}`);
 });
 
 router.post('/:command', /*cors(),*/ (req, res) => {
-  console.log(`POST request parameters: ${JSON.stringify(req.params)}`);
   const { command } = req.params;
 
-  var response = { response: `Unrecognized command URL ${command}` };
+  var response = { response: `Unrecognized POST command resource ${command}` };
   if (command == 'connection') {
-    console.log("Found connection request " + JSON.stringify(req.body));
     var response = responder.handleConnectionRequest(req.body)
+    res.json(response);
+  }
+  else if (command == 'passthrough') {
+    var success = responder.handlePassthroughRequest(req.body, (data) => {
+      res.json(data);
+    });
+
+    if (!success) {
+      res.json({Error: 'Failed to send passthrough command (probably not connected)'})
+    }
   }
 
-  res.json(response);
-  console.log(`POST response: ${JSON.stringify(response)}`);
+  //res.json(response);
 });
 
 var server = http.createServer(app);

@@ -77,12 +77,35 @@ div.messagebar {
     margin: 0.25rem; 
 }
 
+.control-label {
+    float: left;
+}
+
+.control {
+    float: right;
+}
+
+.property-switch {
+    vertical-align: middle;
+    margin: 8px 2px 0 4px;
+    /*margin-left: 4px;*/
+}
+
 div.messages {
     margin: auto;
     width: 98%;
 }
 
 #messages { 
+    list-style-type: none; 
+    margin: 0;
+    padding: 0;
+    
+    resize: none;
+    width: 100%;
+}
+
+#status { 
     list-style-type: none; 
     margin: 0;
     padding: 0;

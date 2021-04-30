@@ -29,6 +29,31 @@ class RequestResponder {
     return { response: "Ok", status: status };
   }
 
+  handlePassthroughRequest(req, callback) {
+    if (req && req.request) {
+      if (req.request == 'passthrough') {
+        var status = this.controller.passthrough(req.packet, (data) => callback(data));
+
+        if (status) {
+          console.log('Passthrough command in progress');
+        } else {
+          console.log('Passthrough command failed');
+          callback({ response: `Unable to complete passthrough request ${req.request}` });
+        }
+
+        return status;
+      }
+      else {
+        console.log(`Unrecognized passthrough request ${req.request}`);
+        callback({ response: `Unrecognized passthrough request ${req.request}` });
+        return false;
+      }
+    }
+
+    callback({ response: "Invalid request format" });
+    return false;
+  }
+
 }
 
 

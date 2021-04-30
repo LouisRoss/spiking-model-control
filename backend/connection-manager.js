@@ -3,11 +3,12 @@ const net = require('net');
 client = null;
 const queryStatus = { Query: "Status" };
 
-status = { connected: false };
+status = { connected: false, RecordEnable: false };
 
 
 class PrivateSingleton {
   constructor() {
+    this.passthroughCallback = null;
     setInterval(this.statusPoll, 1500);
   }
 
@@ -35,8 +36,21 @@ class PrivateSingleton {
   }
 
   getStatus() {
-    console.log(`Getting current status: ${JSON.stringify(status)}`);
+    //console.log(`Getting current status: ${JSON.stringify(status)}`);
     return status;
+  }
+
+  passthrough(query, callback) {
+    if (client == null) {
+      console.log('Attempt to send passthrough to unconnected model engine');
+      return false;
+    }
+
+    this.passthroughCallback = callback;
+    console.log(`Sending passthrough command ${query.Query}`);
+    client.write(JSON.stringify(query));
+
+    return true;
   }
 
   attemptConnection(hostName)
@@ -53,51 +67,65 @@ class PrivateSingleton {
       console.log('Connection remote address : ' + client.remoteAddress + ":" + client.remotePort);
     });
 
-    client.setTimeout(10000);
-    client.setEncoding('utf8');
-
     return this.setupClient();
   }
-
+  
   setupClient() {
+    client.setTimeout(10000);
+    client.setEncoding('utf8');
+  
     // When receive server send back data.
-    client.on('data', function (data) {
-      if (data) {
-        status.connected = true;
-        var fullResponse = JSON.stringify(data).trim();
-        if (fullResponse && fullResponse.length > 0) {
-          console.log('Server return data : ' + fullResponse);
-          var response = JSON.parse(data);
-          if (response.Error) {
-            status = { ...status, ...response.Error };
-          }
-          else if (response.Query) {
-            if (response.Query.Query == 'Status') {
-              status = { ...status, ...response.Response };
-              console.log('Capturing Status: ' + JSON.stringify(status));
-            }
-          }
-        }
-      }
-    });
+    client.on('data',  (data) => this.handleModelResponses(data));
 
     // When connection disconnected.
-    client.on('end', function () {
+    client.on('end', () => {
         console.log('Client socket disconnect. ');
         this.disconnect();
     });
 
-    client.on('timeout', function () {
+    client.on('timeout', () => {
         console.log('Client connection timeout. ');
         this.disconnect();
     });
 
-    client.on('error', function (err) {
+    client.on('error', (err) => {
         console.error(JSON.stringify(err));
         this.disconnect();
     });
 
     return true;
+  }
+
+  handleModelResponses(data) {
+    if (data) {
+      status.connected = true;
+      var fullResponse = JSON.stringify(data).trim();
+      if (fullResponse && fullResponse.length > 0) {
+        console.log('Server return data : ' + fullResponse);
+
+        var response = JSON.parse(data);
+        this.parseModelResponses(response);
+      }
+    }
+  }
+
+  parseModelResponses(response) {
+    if (response.Error) {
+      status = { ...status, ...response.Error };
+    }
+    else if (response.Query) {
+      if (response.Query.Query == 'Status') {
+        status = { ...status, ...response.Response };
+        console.log('Capturing Status: ' + JSON.stringify(status));
+      }
+      else if (response.Query.Query == 'Control') {
+        console.log('Received control response, returning');
+        if (this.passthroughCallback) {
+          this.passthroughCallback(response.Response);
+          this.passthroughCallback = null;
+        }
+      }
+    }
   }
 }
 
