@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Switch from "react-switch";
+import Select from "react-select";
 import ReactDOM from 'react-dom';
 import './App.css';
 
@@ -30,6 +31,13 @@ function StatusRequestResponse(callback) {
     method: 'GET',
   };
   RequestResponse('status', init, callback);
+}
+
+function FullStatusRequestResponse(callback) {
+  var init = {
+    method: 'GET',
+  };
+  RequestResponse('fullstatus', init, callback);
 }
 
 function PassthroughRequestResponse(request, callback) {
@@ -63,12 +71,52 @@ function RequestResponse(resource, init, callback) {
     messages.value += `\nError ${error}`;
     console.log(`Error ${error}`);
 
-    var disconnectedResponse = { response: 'Ok', status: { connected: false }};
+    var disconnectedResponse = {query:init.body, response:{result:'ok', status: { connected: false }}};
     callback(disconnectedResponse);
   });
 }
 
+const logLevels = [
+  { value: 0, label: 'None' },
+  { value: 1, label: 'Status' },
+  { value: 2, label: 'Diagnostic' },
+];
 
+const enginePeriods = [
+  { value: 100, label: '0.1 ms' },
+  { value: 200, label: '0.2 ms' },
+  { value: 500, label: '0.5 ms' },
+  { value: 1000, label: '1.0 ms' },
+  { value: 2000, label: '2.0 ms' },
+  { value: 5000, label: '5.0 ms' },
+  { value: 10000, label: '10 ms' },
+  { value: 20000, label: '20 ms' },
+  { value: 50000, label: '50 ms' },
+  { value: 100000, label: '100 ms' },
+  { value: 200000, label: '200 ms' },
+  { value: 500000, label: '500 ms' },
+  { value: 1000000, label: '1 s' },
+  { value: 2000000, label: '2 s' },
+  { value: 5000000, label: '5 s' },
+];
+
+class PropertySelect extends Component {
+  constructor(props) {
+    super(props);
+    this.x = 0;
+  }
+
+  render() {
+    return (
+      <Select
+        className="control select"
+        defaultValue={this.props.getValue()}
+        options={this.props.options}
+        onChange = {this.props.setValue}
+      />
+    );
+  }
+}
 
 class PropertySwitch extends Component {
   constructor(props) {
@@ -78,7 +126,6 @@ class PropertySwitch extends Component {
   }
 
   handleChange(checked) {
-    //this.setState({ checked: this.props.isChecked() });
     this.setState({ checked: checked });
   }
 
@@ -128,24 +175,44 @@ class ControlPanel extends React.Component {
     super(props);
     this.state = {
       connected: false,
+      running: false,
       recording: false,
+      logging: false,
+      engineinit: false,
+      enginefail: false,
+      engineperiod: 1000,
+      iterations: 0,
+      logfile: '',
+      recordfile: '',
+      loglevel: 1,
+      totalwork: 0,
     };
 
     this.statusPoll = this.statusPoll.bind(this);
     setInterval(this.statusPoll, 500);
   }
   
+  distributStatusResonse(data) {
+    var status = document.getElementById('status');
+    status.value = JSON.stringify(data);
+  
+    if (typeof data.status.run          !== 'undefined') { this.setState({ running: data.status.run }); }
+    if (typeof data.status.recordenable !== 'undefined') { this.setState({ recording: data.status.recordenable }); }
+    if (typeof data.status.logenable    !== 'undefined') { this.setState({ logging: data.status.logenable }); }
+    if (typeof data.status.enginefail   !== 'undefined') { this.setState({ enginefail: data.status.enginefail }); }
+    if (typeof data.status.engineinit   !== 'undefined') { this.setState({ engineinit: data.status.engineinit }); }
+    if (typeof data.status.engineperiod !== 'undefined') { this.setState({ engineperiod: data.status.engineperiod }); }
+    if (typeof data.status.iterations   !== 'undefined') { this.setState({ iterations: data.status.iterations }); }
+    if (typeof data.status.logfile      !== 'undefined') { this.setState({ logfile: data.status.logfile }); }
+    if (typeof data.status.loglevel     !== 'undefined') { this.setState({ loglevel: data.status.loglevel }); }
+    if (typeof data.status.recordfile   !== 'undefined') { this.setState({ recordfile: data.status.recordfile }); }
+    if (typeof data.status.totalwork    !== 'undefined') { this.setState({ totalwork: data.status.totalwork }); }
+  }
+  
   statusPoll() {
     StatusRequestResponse((data) => {
-      var status = document.getElementById('status');
-      status.value = JSON.stringify(data);
-      if (typeof data.status.RecordEnable !== 'undefined') {
-        this.setState({ connected: data.status.connected, recording: data.status.RecordEnable });
-      }
-      else {
-        //console.log(data.status.RecordEnable);
-        this.setState({ connected: data.status.connected });
-      }
+      this.setState({ connected: data.response.status.connected });
+      this.distributStatusResonse(data.response)
     });
   }
 
@@ -166,13 +233,50 @@ class ControlPanel extends React.Component {
       });
   }
 
-  handleRecordSwitch(checked, event, id) {
-    var recordSwitchReq = { request: 'passthrough', packet: { Query: 'Control', Values: { RecordEnable: checked } } };
-
-    PassthroughRequestResponse(recordSwitchReq, (data) => {
-      console.log(`Record switch response: ${JSON.stringify(data)}`);
-    });
+  handleRunningSwitch(checked) {
+    this.sendSwitchChangeCommand({ run: checked });
   }
+  
+  handleLogSwitch(checked) {
+    this.sendSwitchChangeCommand({ logenable: checked });
+  }
+
+  handleRecordSwitch(checked) {
+    this.sendSwitchChangeCommand({ recordenable: checked });
+  }
+
+  setLogLevel(value, action) {
+    console.log(`Set log level ${JSON.stringify(value)}: ${JSON.stringify(action)}`);
+    this.sendSwitchChangeCommand({ loglevel: value.value });
+  }
+
+  setEnginePeriod(value, action) {
+    console.log(`Set engine period ${JSON.stringify(value)}: ${JSON.stringify(action)}`);
+    this.sendSwitchChangeCommand({ engineperiod: value.value });
+  }
+
+  getEnginePeriod() {
+    let result = enginePeriods[3];
+    let found = false;
+
+    enginePeriods.forEach((value) => {
+      if (!found && this.state.engineperiod >= value.value) {
+        result = value;
+        found = true;
+      }
+    });
+
+    return result;
+  }
+
+  sendSwitchChangeCommand(values) {
+    var switchChangeReq = { request: 'passthrough', packet: { query: 'control', values: values } };
+
+    PassthroughRequestResponse(switchChangeReq, (data) => {
+      console.log(`Switch change response: ${JSON.stringify(data)}`);
+      this.distributStatusResonse(data);
+    });  
+  }  
 
   render() {
     return (
@@ -198,9 +302,50 @@ class ControlPanel extends React.Component {
         </section>
 
         <section className="rightpane">
-          <PropertySwitch onChange={this.handleRecordSwitch} isChecked={() => false} value="Logging" />
-          <PropertySwitch onChange={this.handleRecordSwitch} isChecked={() => this.state.recording} value="Recording" />
-          <PropertySwitch onChange={this.handleRecordSwitch} isChecked={() => false} value="Running" />
+          <PropertySwitch onChange={(checked) => this.handleRunningSwitch(checked)} isChecked={() => this.state.running} value="Running" />
+          <div className="property-switch">
+            <span className="control-label">Engine Init</span>
+            <span className="control">{this.state.engineinit ? 'true' : 'false'}</span>
+          </div>
+          <div className="property-switch">
+            <span className="control-label">Engine Fail</span>
+            <span className="control">{this.state.enginefail ? 'true' : 'false'}</span>
+          </div>
+
+          <hr />
+
+          <PropertySwitch onChange={(checked) => this.handleLogSwitch(checked)} isChecked={() => this.state.logging} value="Logging" />
+          <div className="property-switch">
+            <span className="control-label">Log File</span>
+            <span className="control">{this.state.logfile}</span>
+          </div>
+          <div className="property-switch">
+            <span className="control-label">Logging Level</span>
+            <PropertySelect options = {logLevels} getValue = {() => logLevels[this.state.loglevel]} setValue = {(value, action) => this.setLogLevel(value, action)}/>
+          </div>
+
+          <hr />
+
+          <PropertySwitch onChange={(checked) => this.handleRecordSwitch(checked)} isChecked={() => this.state.recording} value="Recording" />
+          <div className="property-switch">
+            <span className="control-label">Record File</span>
+            <span className="control">{this.state.recordfile}</span>
+          </div>
+          <div className="property-switch">
+          <span className="control-label">Engine Period</span>
+            <PropertySelect options = {enginePeriods} getValue = {() => this.getEnginePeriod()} setValue = {(value, action) => this.setEnginePeriod(value, action)}/>
+          </div>
+
+          <hr />
+
+          <div className="property-switch">
+            <span className="control-label">Iterations</span>
+            <span className="control">{this.state.iterations}</span>
+          </div>
+          <div className="property-switch">
+            <span className="control-label">Total Work</span>
+            <span className="control">{this.state.totalwork}</span>
+          </div>
         </section>
       </section>
     );

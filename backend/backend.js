@@ -9,7 +9,7 @@ const cors = require("cors"); // enforce CORS, will be set to frontend URL when 
 
 const cors_conf = {
   origin: ["http://0.0.0.0:5000"], // ! temporary
-  methods: ["POST"],
+  methods: ["POST", "GET"],
 };
 
 const requestResponder = require('./request-responder');
@@ -31,6 +31,9 @@ router.get('/:command', (req, res) => {
   if (command == 'status') {
     var response = responder.handleStatusRequest()
   }
+  else if (command == 'fullstatus') {
+    var response = responder.handleFullStatusRequest()
+  }
 
   res.json(response);
 });
@@ -45,6 +48,7 @@ router.post('/:command', /*cors(),*/ (req, res) => {
   }
   else if (command == 'passthrough') {
     var success = responder.handlePassthroughRequest(req.body, (data) => {
+      console.log('Backend POST passthrough handling response ' + JSON.stringify(data));
       res.json(data);
     });
 

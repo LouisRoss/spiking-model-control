@@ -85,10 +85,22 @@ div.messagebar {
     float: right;
 }
 
+.select {
+    width: 160px;
+}
+
 .property-switch {
     vertical-align: middle;
     margin: 8px 2px 0 4px;
     /*margin-left: 4px;*/
+}
+
+.rightpane hr {
+    width: 50%;
+}
+
+span.loglevel {
+    width: 180px;
 }
 
 div.messages {

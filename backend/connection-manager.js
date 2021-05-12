@@ -1,24 +1,30 @@
 const net = require('net');
 
 client = null;
-const queryStatus = { Query: "Status" };
 
-status = { connected: false, RecordEnable: false };
+status = { connected: false };
 
 
 class PrivateSingleton {
   constructor() {
     this.passthroughCallback = null;
-    setInterval(this.statusPoll, 1500);
+    setInterval(this.dynamicStatusPoll, 1000);
   }
 
-  statusPoll() {
+  dynamicStatusPoll() {
     if (client) {
-      console.log('Polling for status');
-      client.write(JSON.stringify(queryStatus));
+      console.log('Polling for dynamic status');
+      client.write(JSON.stringify({ query: "dynamicstatus" }));
     }
   }
-  
+
+  fullStatusPoll() {
+    if (client) {
+      console.log('Polling for full status');
+      client.write(JSON.stringify({ query: "fullstatus" }));
+    }
+  }
+
   isConnected() {
     return client != null;
   }
@@ -47,7 +53,7 @@ class PrivateSingleton {
     }
 
     this.passthroughCallback = callback;
-    console.log(`Sending passthrough command ${query.Query}`);
+    console.log(`Sending passthrough command ${query.query}`);
     client.write(JSON.stringify(query));
 
     return true;
@@ -110,18 +116,26 @@ class PrivateSingleton {
   }
 
   parseModelResponses(response) {
-    if (response.Error) {
-      status = { ...status, ...response.Error };
+    if (response.response.result && response.response.result != 'ok') {
+      status[error] = response.response.error;
+      status[errordetail] = response.response.errordetail;
     }
-    else if (response.Query) {
-      if (response.Query.Query == 'Status') {
-        status = { ...status, ...response.Response };
+    else if (response.response.result && response.response.result == 'ok' && response.query) {
+      if (response.query.query == 'fullstatus' || response.query.query == 'dynamicstatus') {
+        status = { ...status, ...response.response.status };
+        status.error = null;
+        status.errordetail = null;
         console.log('Capturing Status: ' + JSON.stringify(status));
       }
-      else if (response.Query.Query == 'Control') {
-        console.log('Received control response, returning');
+      else if (response.query.query == 'control' || response.query.query == 'configurations') {
+        if (response.response.status) {
+          status = { ...status, ...response.response.status };
+        }
+        status.error = null;
+        status.errordetail = null;
+        console.log('Received control response, returning' + JSON.stringify(response.response));
         if (this.passthroughCallback) {
-          this.passthroughCallback(response.Response);
+          this.passthroughCallback(response.response);
           this.passthroughCallback = null;
         }
       }
