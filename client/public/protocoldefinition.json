@@ -105,6 +105,31 @@
           "run":true
         }
       }
+    },
+    {
+      "query":
+      {
+        "query":"control",
+        "values":
+        {
+          "run":true,
+          "configuration":"l1"
+        }
+      },
+      "response":
+      {
+        "result":"ok",
+        "status":
+        {
+          "logenable":false,
+          "recordenable":false,
+          "engineperiod":10000,
+          "engineinit":true,
+          "enginenfail":false,
+          "iterations":10134,
+          "run":true
+        }
+      }
     }
   ]
 }

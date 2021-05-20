@@ -29,6 +29,19 @@ class RequestResponder {
     return {query:req, response:{result:'fail', error:'bad request', errordetail:"Invalid request format"}};
   }
 
+  handleConfigurationsRequest() {
+    //this.controller.getConfigurations();
+    return new Promise(resolve => {
+      var status = this.controller.passthrough({ query: "configurations" }, data => resolve(data));
+      if (status) {
+        console.log('Configurations query sent');
+      } 
+      else {
+        console.log('Failed to send configurations query');
+      }
+    });
+  }
+
   handleFullStatusRequest() {
     this.controller.fullStatusPoll();
   }

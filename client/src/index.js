@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import Switch from "react-switch";
 import Select from "react-select";
+import AsyncSelect from "react-select/async";
 import ReactDOM from 'react-dom';
+import '@fontsource/roboto';
 import './App.css';
 
  /*
@@ -26,20 +28,27 @@ function ConnectionRequestResponse(request, callback) {
   RequestResponse('connection', init, callback);
 }
 
+function ConfigurationsRequestResponse(callback) {
+  var init = {
+    method: 'GET',
+  };
+  RequestResponse('configurations', init, callback);
+}
+
 function StatusRequestResponse(callback) {
   var init = {
     method: 'GET',
   };
   RequestResponse('status', init, callback);
 }
-
+/*
 function FullStatusRequestResponse(callback) {
   var init = {
     method: 'GET',
   };
   RequestResponse('fullstatus', init, callback);
 }
-
+*/
 function PassthroughRequestResponse(request, callback) {
   var init = {
     method: 'POST',
@@ -83,6 +92,7 @@ const logLevels = [
 ];
 
 const enginePeriods = [
+  { value: 0, label: 'Unknown' },
   { value: 100, label: '0.1 ms' },
   { value: 200, label: '0.2 ms' },
   { value: 500, label: '0.5 ms' },
@@ -101,34 +111,66 @@ const enginePeriods = [
 ];
 
 class PropertySelect extends Component {
-  constructor(props) {
-    super(props);
-    this.x = 0;
-  }
-
   render() {
     return (
       <Select
         className="control select"
-        defaultValue={this.props.getValue()}
+        defaultValue={this.props.currentValue()}
         options={this.props.options}
         onChange = {this.props.setValue}
+        value={this.props.currentValue()}
+      />
+    );
+  }
+}
+
+const loadOptions = (inputValue, callback) => {
+  console.log('Loading options...');
+  ConfigurationsRequestResponse((data) => {
+    console.log(`Received configurations ${JSON.stringify(data)}`);
+    callback([
+      { value: 'a1', label: 'a1' },
+      { value: 'l1', label: 'l1' },
+      { value: 'bmtk1', label: 'bmtk2' }
+    ]);
+  });
+}
+
+const loadOptions2 = inputValue => 
+new Promise(resolve => {
+  ConfigurationsRequestResponse((data) => {
+    console.log(`Received configurations ${JSON.stringify(data)}`);
+    if (typeof data.result === 'undefined' || data.result !== 'ok') {
+      if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
+        var status = document.getElementById('status');
+        status.value = `Error: ${data.error} - ${data.errordetail}`
+        }
+        resolve([]);
+      }
+      else {
+        var options = [];
+        data.options.configurations.forEach(option => {
+          options.push({value: option, label: option});
+        })
+       resolve(options);
+      }
+    });
+  });
+
+class AsyncConfigurationsSelect extends Component {
+  render() {
+    return (
+      <AsyncSelect
+        className="control select"
+        cacheOptions
+        loadOptions={loadOptions2}
+        defaultOptions={[]}
       />
     );
   }
 }
 
 class PropertySwitch extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { checked: false };
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(checked) {
-    this.setState({ checked: checked });
-  }
-
   render() {
     return (
         <label className="property-switch" htmlFor="material-switch">
@@ -170,6 +212,7 @@ class ConnectDisconnectButton extends React.Component {
 
 
 
+
 class ControlPanel extends React.Component {
   constructor(props) {
     super(props);
@@ -180,11 +223,11 @@ class ControlPanel extends React.Component {
       logging: false,
       engineinit: false,
       enginefail: false,
-      engineperiod: 1000,
+      engineperiod: 0,
       iterations: 0,
       logfile: '',
       recordfile: '',
-      loglevel: 1,
+      loglevel: 0,
       totalwork: 0,
     };
 
@@ -194,19 +237,26 @@ class ControlPanel extends React.Component {
   
   distributStatusResonse(data) {
     var status = document.getElementById('status');
-    status.value = JSON.stringify(data);
-  
-    if (typeof data.status.run          !== 'undefined') { this.setState({ running: data.status.run }); }
-    if (typeof data.status.recordenable !== 'undefined') { this.setState({ recording: data.status.recordenable }); }
-    if (typeof data.status.logenable    !== 'undefined') { this.setState({ logging: data.status.logenable }); }
-    if (typeof data.status.enginefail   !== 'undefined') { this.setState({ enginefail: data.status.enginefail }); }
-    if (typeof data.status.engineinit   !== 'undefined') { this.setState({ engineinit: data.status.engineinit }); }
-    if (typeof data.status.engineperiod !== 'undefined') { this.setState({ engineperiod: data.status.engineperiod }); }
-    if (typeof data.status.iterations   !== 'undefined') { this.setState({ iterations: data.status.iterations }); }
-    if (typeof data.status.logfile      !== 'undefined') { this.setState({ logfile: data.status.logfile }); }
-    if (typeof data.status.loglevel     !== 'undefined') { this.setState({ loglevel: data.status.loglevel }); }
-    if (typeof data.status.recordfile   !== 'undefined') { this.setState({ recordfile: data.status.recordfile }); }
-    if (typeof data.status.totalwork    !== 'undefined') { this.setState({ totalwork: data.status.totalwork }); }
+    //status.value = JSON.stringify(data);
+    
+    if (typeof data.status !== 'undefined')
+    {
+      if (typeof data.status.run          !== 'undefined') { this.setState({ running: data.status.run }); }
+      if (typeof data.status.recordenable !== 'undefined') { this.setState({ recording: data.status.recordenable }); }
+      if (typeof data.status.logenable    !== 'undefined') { this.setState({ logging: data.status.logenable }); }
+      if (typeof data.status.enginefail   !== 'undefined') { this.setState({ enginefail: data.status.enginefail }); }
+      if (typeof data.status.engineinit   !== 'undefined') { this.setState({ engineinit: data.status.engineinit }); }
+      if (typeof data.status.engineperiod !== 'undefined') { this.setState({ engineperiod: data.status.engineperiod }); }
+      if (typeof data.status.iterations   !== 'undefined') { this.setState({ iterations: data.status.iterations }); }
+      if (typeof data.status.logfile      !== 'undefined') { this.setState({ logfile: data.status.logfile }); }
+      if (typeof data.status.loglevel     !== 'undefined') { this.setState({ loglevel: data.status.loglevel }); }
+      if (typeof data.status.recordfile   !== 'undefined') { this.setState({ recordfile: data.status.recordfile }); }
+      if (typeof data.status.totalwork    !== 'undefined') { this.setState({ totalwork: data.status.totalwork }); }
+    }
+
+    if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
+      status.value = `Error: ${data.error} - ${data.errordetail}`
+    }
   }
   
   statusPoll() {
@@ -233,39 +283,18 @@ class ControlPanel extends React.Component {
       });
   }
 
-  handleRunningSwitch(checked) {
-    this.sendSwitchChangeCommand({ run: checked });
-  }
-  
-  handleLogSwitch(checked) {
-    this.sendSwitchChangeCommand({ logenable: checked });
-  }
-
-  handleRecordSwitch(checked) {
-    this.sendSwitchChangeCommand({ recordenable: checked });
-  }
-
-  setLogLevel(value, action) {
-    console.log(`Set log level ${JSON.stringify(value)}: ${JSON.stringify(action)}`);
-    this.sendSwitchChangeCommand({ loglevel: value.value });
-  }
-
-  setEnginePeriod(value, action) {
-    console.log(`Set engine period ${JSON.stringify(value)}: ${JSON.stringify(action)}`);
-    this.sendSwitchChangeCommand({ engineperiod: value.value });
-  }
-
   getEnginePeriod() {
-    let result = enginePeriods[3];
+    let result = enginePeriods[2];
     let found = false;
-
+    
     enginePeriods.forEach((value) => {
-      if (!found && this.state.engineperiod >= value.value) {
+      if (!found && this.state.engineperiod <= value.value) {
         result = value;
         found = true;
       }
     });
-
+    
+    //console.log(`getEnginePeriod returning ${JSON.stringify(result)}`)
     return result;
   }
 
@@ -278,6 +307,7 @@ class ControlPanel extends React.Component {
     });  
   }  
 
+  
   render() {
     return (
       <section className="mainbody">
@@ -294,15 +324,23 @@ class ControlPanel extends React.Component {
 
             <div className="messagebar">
               <div className="messages">
-                <textarea name="messages" id="messages" cols="120" rows="20" readOnly></textarea>
-                <textarea name="status" id="status" cols="120" rows="3" readOnly></textarea>
+                <textarea name="messages" id="messages" cols="120" rows="30" readOnly></textarea>
+                <textarea name="status" id="status" cols="120" rows="5" readOnly></textarea>
               </div>
             </div>
           </div>
         </section>
 
         <section className="rightpane">
-          <PropertySwitch onChange={(checked) => this.handleRunningSwitch(checked)} isChecked={() => this.state.running} value="Running" />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ run: checked })} isChecked={() => this.state.running} value="Running" />
+
+          
+          <div className="property-switch">
+            <span className="control-label">Configurations</span>
+            <AsyncConfigurationsSelect setValue = {value => this.sendSwitchChangeCommand({ loglevel: value.value })}/>
+          </div>
+
+
           <div className="property-switch">
             <span className="control-label">Engine Init</span>
             <span className="control">{this.state.engineinit ? 'true' : 'false'}</span>
@@ -314,26 +352,26 @@ class ControlPanel extends React.Component {
 
           <hr />
 
-          <PropertySwitch onChange={(checked) => this.handleLogSwitch(checked)} isChecked={() => this.state.logging} value="Logging" />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ logenable: checked })} isChecked={() => this.state.logging} value="Logging" />
           <div className="property-switch">
             <span className="control-label">Log File</span>
             <span className="control">{this.state.logfile}</span>
           </div>
           <div className="property-switch">
             <span className="control-label">Logging Level</span>
-            <PropertySelect options = {logLevels} getValue = {() => logLevels[this.state.loglevel]} setValue = {(value, action) => this.setLogLevel(value, action)}/>
+            <PropertySelect options = {logLevels} currentValue = {() => logLevels[this.state.loglevel]} setValue = {value => this.sendSwitchChangeCommand({ loglevel: value.value })}/>
           </div>
 
           <hr />
 
-          <PropertySwitch onChange={(checked) => this.handleRecordSwitch(checked)} isChecked={() => this.state.recording} value="Recording" />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ recordenable: checked })} isChecked={() => this.state.recording} value="Recording" />
           <div className="property-switch">
             <span className="control-label">Record File</span>
             <span className="control">{this.state.recordfile}</span>
           </div>
           <div className="property-switch">
           <span className="control-label">Engine Period</span>
-            <PropertySelect options = {enginePeriods} getValue = {() => this.getEnginePeriod()} setValue = {(value, action) => this.setEnginePeriod(value, action)}/>
+            <PropertySelect options = {enginePeriods} currentValue = {() => this.getEnginePeriod()} setValue = {value => this.sendSwitchChangeCommand({ engineperiod: value.value })}/>
           </div>
 
           <hr />

@@ -27,15 +27,26 @@ const router = express.Router();
 router.get('/:command', (req, res) => {
   const { command } = req.params;
 
-  var response = { response: `Unrecognized GET command resource ${command}` };
   if (command == 'status') {
     var response = responder.handleStatusRequest()
+    res.json(response);
   }
   else if (command == 'fullstatus') {
     var response = responder.handleFullStatusRequest()
+    res.json(response);
   }
-
-  res.json(response);
+  else if (command == 'configurations') {
+    console.log('backend handling GET configurations');
+    responder.handleConfigurationsRequest()
+    .then(data => { 
+      console.log(`configurations response ${JSON.stringify(data)}`); 
+      res.json(data);
+    });
+  }
+  else {
+    var response = { response: `Unrecognized GET command resource ${command}` };
+    res.json(response);
+  }
 });
 
 router.post('/:command', /*cors(),*/ (req, res) => {
