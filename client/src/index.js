@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import Switch from "react-switch";
-import Select from "react-select";
-import AsyncSelect from "react-select/async";
+import { Component } from 'react';
+import { RestManager } from "./rest-manager";
+import { PropertySelect, AsyncConfigurationsSelect } from "./property-select.js";
+import { PropertySwitch, ConnectDisconnectButton } from "./property-switch.js";
 import ReactDOM from 'react-dom';
 import '@fontsource/roboto';
 import './App.css';
@@ -16,82 +16,15 @@ import './App.css';
 }
 */
 
+var restManager = RestManager.getInstance();
 
-const baseURL = 'http://localhost:5000/';
-
-function ConnectionRequestResponse(request, callback) {
-  var init = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', },
-    body: JSON.stringify(request)
-  };
-  RequestResponse('connection', init, callback);
-}
-
-function ConfigurationsRequestResponse(callback) {
-  var init = {
-    method: 'GET',
-  };
-  RequestResponse('configurations', init, callback);
-}
-
-function StatusRequestResponse(callback) {
-  var init = {
-    method: 'GET',
-  };
-  RequestResponse('status', init, callback);
-}
-/*
-function FullStatusRequestResponse(callback) {
-  var init = {
-    method: 'GET',
-  };
-  RequestResponse('fullstatus', init, callback);
-}
-*/
-function PassthroughRequestResponse(request, callback) {
-  var init = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', },
-    body: JSON.stringify(request)
-  };
-  RequestResponse('passthrough', init, callback);
-}
-
-function RequestResponse(resource, init, callback) {
-  var messages = document.getElementById('messages');
+  const logLevels = [
+    { value: 0, label: 'None' },
+    { value: 1, label: 'Status' },
+    { value: 2, label: 'Diagnostic' },
+  ];
   
-  if (init.body) {
-    console.log(`request: ${init.body}`)
-  }
-  
-  fetch(baseURL + resource, init)
-  .then(res => {
-    if (res.ok) {
-      return res.json();
-    } else {
-      messages.value += "\nError response";
-    }
-  })
-  .then(data => {
-    callback(data);
-  })
-  .catch(error => {
-    messages.value += `\nError ${error}`;
-    console.log(`Error ${error}`);
-
-    var disconnectedResponse = {query:init.body, response:{result:'ok', status: { connected: false }}};
-    callback(disconnectedResponse);
-  });
-}
-
-const logLevels = [
-  { value: 0, label: 'None' },
-  { value: 1, label: 'Status' },
-  { value: 2, label: 'Diagnostic' },
-];
-
-const enginePeriods = [
+  const enginePeriods = [
   { value: 0, label: 'Unknown' },
   { value: 100, label: '0.1 ms' },
   { value: 200, label: '0.2 ms' },
@@ -110,110 +43,7 @@ const enginePeriods = [
   { value: 5000000, label: '5 s' },
 ];
 
-class PropertySelect extends Component {
-  render() {
-    return (
-      <Select
-        className="control select"
-        defaultValue={this.props.currentValue()}
-        options={this.props.options}
-        onChange = {this.props.setValue}
-        value={this.props.currentValue()}
-      />
-    );
-  }
-}
-
-const loadOptions = (inputValue, callback) => {
-  console.log('Loading options...');
-  ConfigurationsRequestResponse((data) => {
-    console.log(`Received configurations ${JSON.stringify(data)}`);
-    callback([
-      { value: 'a1', label: 'a1' },
-      { value: 'l1', label: 'l1' },
-      { value: 'bmtk1', label: 'bmtk2' }
-    ]);
-  });
-}
-
-const loadOptions2 = inputValue => 
-new Promise(resolve => {
-  ConfigurationsRequestResponse((data) => {
-    console.log(`Received configurations ${JSON.stringify(data)}`);
-    if (typeof data.result === 'undefined' || data.result !== 'ok') {
-      if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
-        var status = document.getElementById('status');
-        status.value = `Error: ${data.error} - ${data.errordetail}`
-        }
-        resolve([]);
-      }
-      else {
-        var options = [];
-        data.options.configurations.forEach(option => {
-          options.push({value: option, label: option});
-        })
-       resolve(options);
-      }
-    });
-  });
-
-class AsyncConfigurationsSelect extends Component {
-  render() {
-    return (
-      <AsyncSelect
-        className="control select"
-        cacheOptions
-        loadOptions={loadOptions2}
-        defaultOptions={[]}
-      />
-    );
-  }
-}
-
-class PropertySwitch extends Component {
-  render() {
-    return (
-        <label className="property-switch" htmlFor="material-switch">
-          <span className="control-label">{this.props.value}</span>
-          <Switch
-            checked={this.props.isChecked()}
-            onChange={this.props.onChange}
-            onColor="#86d3ff"
-            onHandleColor="#2693e6"
-            uncheckedIcon={false}
-            checkedIcon={false}
-            boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
-            activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
-            height={20}
-            width={36}
-            className="react-switch control"
-            id="material-switch"
-          />
-        </label>
-    );
-  }
-}
-
-
-class ConnectDisconnectButton extends React.Component {
-  render() {
-    return (
-      <button 
-        id="connectButton" 
-        className="connect-disconnect" 
-        disabled={this.props.disabled()} 
-        style={{opacity: (this.props.disabled()? 0.3 : 1.0)}}
-        onClick={this.props.onClick}>
-          {this.props.value}
-      </button>
-    );
-  }
-}
-
-
-
-
-class ControlPanel extends React.Component {
+class ControlPanel extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -242,6 +72,8 @@ class ControlPanel extends React.Component {
     if (typeof data.status !== 'undefined')
     {
       if (typeof data.status.run          !== 'undefined') { this.setState({ running: data.status.run }); }
+      if (typeof data.status.pause        !== 'undefined') { this.setState({ pause: data.status.pause }); }
+      if (typeof data.status.controlfile  !== 'undefined') { this.setState({ controlfile: data.status.controlfile }); }
       if (typeof data.status.recordenable !== 'undefined') { this.setState({ recording: data.status.recordenable }); }
       if (typeof data.status.logenable    !== 'undefined') { this.setState({ logging: data.status.logenable }); }
       if (typeof data.status.enginefail   !== 'undefined') { this.setState({ enginefail: data.status.enginefail }); }
@@ -260,7 +92,7 @@ class ControlPanel extends React.Component {
   }
   
   statusPoll() {
-    StatusRequestResponse((data) => {
+    restManager.StatusRequestResponse((data) => {
       this.setState({ connected: data.response.status.connected });
       this.distributStatusResonse(data.response)
     });
@@ -276,7 +108,7 @@ class ControlPanel extends React.Component {
       connectReq = { 'request': 'disconnect', 'server': '' };
     }
 
-    ConnectionRequestResponse(connectReq, (data) => {
+    restManager.ConnectionRequestResponse(connectReq, (data) => {
       var messages = document.getElementById('messages');
       messages.value += '\n' + JSON.stringify(data);
       window.scrollTo(0, document.body.scrollHeight);
@@ -301,7 +133,7 @@ class ControlPanel extends React.Component {
   sendSwitchChangeCommand(values) {
     var switchChangeReq = { request: 'passthrough', packet: { query: 'control', values: values } };
 
-    PassthroughRequestResponse(switchChangeReq, (data) => {
+    restManager.PassthroughRequestResponse(switchChangeReq, (data) => {
       console.log(`Switch change response: ${JSON.stringify(data)}`);
       this.distributStatusResonse(data);
     });  
@@ -332,14 +164,14 @@ class ControlPanel extends React.Component {
         </section>
 
         <section className="rightpane">
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ run: checked })} isChecked={() => this.state.running} value="Running" />
-
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ run: checked })} isChecked={() => this.state.running} value={'Running'} label={this.state.controlfile} />
           
           <div className="property-switch">
             <span className="control-label">Configurations</span>
-            <AsyncConfigurationsSelect setValue = {value => this.sendSwitchChangeCommand({ loglevel: value.value })}/>
+            <AsyncConfigurationsSelect setValue = {value => this.sendSwitchChangeCommand({ run: true, configuration: value.value })}/>
           </div>
 
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ pause: checked })} isChecked={() => this.state.pause} value={'Paused'} label='' />
 
           <div className="property-switch">
             <span className="control-label">Engine Init</span>
@@ -352,10 +184,10 @@ class ControlPanel extends React.Component {
 
           <hr />
 
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ logenable: checked })} isChecked={() => this.state.logging} value="Logging" />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ logenable: checked })} isChecked={() => this.state.logging} value="Logging" label='' />
           <div className="property-switch">
             <span className="control-label">Log File</span>
-            <span className="control">{this.state.logfile}</span>
+            <span className="control-value">{this.state.logfile}</span>
           </div>
           <div className="property-switch">
             <span className="control-label">Logging Level</span>
@@ -364,10 +196,10 @@ class ControlPanel extends React.Component {
 
           <hr />
 
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ recordenable: checked })} isChecked={() => this.state.recording} value="Recording" />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ recordenable: checked })} isChecked={() => this.state.recording} value="Recording"  label='' />
           <div className="property-switch">
             <span className="control-label">Record File</span>
-            <span className="control">{this.state.recordfile}</span>
+            <span className="control-value">{this.state.recordfile}</span>
           </div>
           <div className="property-switch">
           <span className="control-label">Engine Period</span>
@@ -378,7 +210,7 @@ class ControlPanel extends React.Component {
 
           <div className="property-switch">
             <span className="control-label">Iterations</span>
-            <span className="control">{this.state.iterations}</span>
+            <span className="control">{Number(this.state.iterations).toLocaleString('en', {useGrouping:true})}</span>
           </div>
           <div className="property-switch">
             <span className="control-label">Total Work</span>

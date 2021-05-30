@@ -79,10 +79,19 @@ div.messagebar {
 
 .control-label {
     float: left;
+    width: 30%;
+}
+
+.control-value {
+    float: left;
+    font-weight: bold;
+    font-family: monospace;
+    width: 20%;
 }
 
 .control {
     float: right;
+    font-weight: bold;
 }
 
 .select {
