@@ -3,7 +3,6 @@ import { RestManager } from "./rest-manager";
 import { PropertySelect, AsyncConfigurationsSelect } from "./property-select.js";
 import { PropertySwitch, ConnectDisconnectButton } from "./property-switch.js";
 import ReactDOM from 'react-dom';
-import '@fontsource/roboto';
 import './App.css';
 
  /*
@@ -59,6 +58,7 @@ class ControlPanel extends Component {
       recordfile: '',
       loglevel: 0,
       totalwork: 0,
+      cpu: 0
     };
 
     this.statusPoll = this.statusPoll.bind(this);
@@ -84,6 +84,7 @@ class ControlPanel extends Component {
       if (typeof data.status.loglevel     !== 'undefined') { this.setState({ loglevel: data.status.loglevel }); }
       if (typeof data.status.recordfile   !== 'undefined') { this.setState({ recordfile: data.status.recordfile }); }
       if (typeof data.status.totalwork    !== 'undefined') { this.setState({ totalwork: data.status.totalwork }); }
+      if (typeof data.status.cpu          !== 'undefined') { this.setState({ cpu: data.status.cpu }); }
     }
 
     if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
@@ -215,6 +216,10 @@ class ControlPanel extends Component {
           <div className="property-switch">
             <span className="control-label">Total Work</span>
             <span className="control">{this.state.totalwork}</span>
+          </div>
+          <div className="property-switch">
+            <span className="control-label">CPU %</span>
+            <span className="control">{(this.state.cpu * 100).toFixed(2)}</span>
           </div>
         </section>
       </section>

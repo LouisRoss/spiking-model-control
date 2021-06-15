@@ -1,6 +1,4 @@
 
-const baseURL = 'http://localhost:5000/';
-
 class PrivateSingleton {
 
   ConnectionRequestResponse(request, callback) {
@@ -48,8 +46,8 @@ class PrivateSingleton {
     if (init.body) {
       console.log(`request: ${init.body}`)
     }
-    
-    fetch(baseURL + resource, init)
+
+    fetch('http://' + window.location.hostname + ':5000/' + resource, init)
     .then(res => {
       if (res.ok) {
         return res.json();
