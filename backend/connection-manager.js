@@ -2,6 +2,11 @@ const net = require('net');
 
 client = null;
 
+cpuhistory = [];
+for (var i = 0; i < 200; i++) {
+  cpuhistory[i] = 0;
+}
+
 status = { connected: false };
 
 
@@ -141,6 +146,13 @@ class PrivateSingleton {
     else if (response.response.result && response.response.result == 'ok' && response.query) {
       if (response.query.query == 'fullstatus' || response.query.query == 'dynamicstatus') {
         status = { ...status, ...response.response.status, error: null, errordetail: null };
+        if (response.response.status.cpu) {
+          for (var i = 0; i < 199; i++) {
+            cpuhistory[i] = cpuhistory[i + 1];
+            cpuhistory[199] = Number(response.response.status.cpu.toFixed(2));
+          }
+        }
+        status.cpuhistory = cpuhistory;
         console.log('Capturing Status: ' + JSON.stringify(status));
       }
       else if (response.query.query == 'control') {

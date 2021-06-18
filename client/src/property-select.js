@@ -15,23 +15,11 @@ class PropertySelect extends Component {
           options={this.props.options}
           onChange = {this.props.setValue}
           value={this.props.currentValue()}
+          isDisabled={!this.props.connected}
         />
       );
     }
   }
-/*  
-  const loadOptions = (inputValue, callback) => {
-    console.log('Loading options...');
-    ConfigurationsRequestResponse((data) => {
-      console.log(`Received configurations ${JSON.stringify(data)}`);
-      callback([
-        { value: 'a1', label: 'a1' },
-        { value: 'l1', label: 'l1' },
-        { value: 'bmtk1', label: 'bmtk2' }
-      ]);
-    });
-  }
-*/
 
 const loadOptions = inputValue => 
   new Promise(resolve => {
@@ -63,6 +51,7 @@ const loadOptions = inputValue =>
           loadOptions={loadOptions}
           defaultOptions={[]}
           onChange={this.props.setValue}
+          isDisabled={!this.props.connected}
         />
       );
     }

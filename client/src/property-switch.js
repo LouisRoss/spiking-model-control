@@ -21,12 +21,13 @@ class PropertySwitch extends Component {
               width={36}
               className="react-switch control"
               id="material-switch"
+              disabled={!this.props.connected}
             />
           </label>
       );
     }
   }
-  
+
   
   class ConnectDisconnectButton extends Component {
     render() {

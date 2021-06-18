@@ -3,6 +3,7 @@ import { RestManager } from "./rest-manager";
 import { PropertySelect, AsyncConfigurationsSelect } from "./property-select.js";
 import { PropertySwitch, ConnectDisconnectButton } from "./property-switch.js";
 import ReactDOM from 'react-dom';
+import { LineChart } from './line-chart.js'
 import './App.css';
 
  /*
@@ -48,6 +49,7 @@ class ControlPanel extends Component {
     this.state = {
       connected: false,
       running: false,
+      pause: false,
       recording: false,
       logging: false,
       engineinit: false,
@@ -58,8 +60,13 @@ class ControlPanel extends Component {
       recordfile: '',
       loglevel: 0,
       totalwork: 0,
-      cpu: 0
+      cpu: 0,
+      cpuhistory: []
     };
+
+    for (let i = 0; i < 200; i++) {
+      this.state.cpuhistory.push(0);
+    }
 
     this.statusPoll = this.statusPoll.bind(this);
     setInterval(this.statusPoll, 500);
@@ -85,6 +92,7 @@ class ControlPanel extends Component {
       if (typeof data.status.recordfile   !== 'undefined') { this.setState({ recordfile: data.status.recordfile }); }
       if (typeof data.status.totalwork    !== 'undefined') { this.setState({ totalwork: data.status.totalwork }); }
       if (typeof data.status.cpu          !== 'undefined') { this.setState({ cpu: data.status.cpu }); }
+      if (typeof data.status.cpuhistory   !== 'undefined') { this.setState({ cpuhistory: data.status.cpuhistory }); }
     }
 
     if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
@@ -157,22 +165,28 @@ class ControlPanel extends Component {
 
             <div className="messagebar">
               <div className="messages">
-                <textarea name="messages" id="messages" cols="120" rows="30" readOnly></textarea>
+                <textarea name="messages" id="messages" cols="120" rows="15" readOnly></textarea>
                 <textarea name="status" id="status" cols="120" rows="5" readOnly></textarea>
               </div>
             </div>
+
+            <div className="stripchartbar">
+              <div className="header">% CPU</div>
+              <LineChart svgHeight="40" svgWidth="400" data={this.state.cpuhistory} color='#333333' />
+            </div>
+
           </div>
         </section>
 
         <section className="rightpane">
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ run: checked })} isChecked={() => this.state.running} value={'Running'} label={this.state.controlfile} />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ run: checked })} isChecked={() => this.state.running} value={'Running'} label={this.state.controlfile} connected={this.state.connected} />
           
           <div className="property-switch">
             <span className="control-label">Configurations</span>
-            <AsyncConfigurationsSelect setValue = {value => this.sendSwitchChangeCommand({ run: true, configuration: value.value })}/>
+            <AsyncConfigurationsSelect setValue = {value => this.sendSwitchChangeCommand({ run: true, configuration: value.value })} connected={this.state.connected} />
           </div>
 
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ pause: checked })} isChecked={() => this.state.pause} value={'Paused'} label='' />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ pause: checked })} isChecked={() => this.state.pause} value={'Paused'} label='' connected={this.state.connected} />
 
           <div className="property-switch">
             <span className="control-label">Engine Init</span>
@@ -185,26 +199,26 @@ class ControlPanel extends Component {
 
           <hr />
 
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ logenable: checked })} isChecked={() => this.state.logging} value="Logging" label='' />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ logenable: checked })} isChecked={() => this.state.logging} value="Logging" label='' connected={this.state.connected} />
           <div className="property-switch">
             <span className="control-label">Log File</span>
             <span className="control-value">{this.state.logfile}</span>
           </div>
           <div className="property-switch">
             <span className="control-label">Logging Level</span>
-            <PropertySelect options = {logLevels} currentValue = {() => logLevels[this.state.loglevel]} setValue = {value => this.sendSwitchChangeCommand({ loglevel: value.value })}/>
+            <PropertySelect options = {logLevels} currentValue = {() => logLevels[this.state.loglevel]} setValue = {value => this.sendSwitchChangeCommand({ loglevel: value.value })} connected={this.state.connected} />
           </div>
 
           <hr />
 
-          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ recordenable: checked })} isChecked={() => this.state.recording} value="Recording"  label='' />
+          <PropertySwitch onChange={(checked) => this.sendSwitchChangeCommand({ recordenable: checked })} isChecked={() => this.state.recording} value="Recording"  label='' connected={this.state.connected} />
           <div className="property-switch">
             <span className="control-label">Record File</span>
             <span className="control-value">{this.state.recordfile}</span>
           </div>
           <div className="property-switch">
           <span className="control-label">Engine Period</span>
-            <PropertySelect options = {enginePeriods} currentValue = {() => this.getEnginePeriod()} setValue = {value => this.sendSwitchChangeCommand({ engineperiod: value.value })}/>
+            <PropertySelect options = {enginePeriods} currentValue = {() => this.getEnginePeriod()} setValue = {value => this.sendSwitchChangeCommand({ engineperiod: value.value })} connected={this.state.connected} />
           </div>
 
           <hr />
