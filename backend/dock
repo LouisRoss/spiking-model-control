@@ -1,0 +1,10 @@
+#!/bin/bash
+echo $(pwd)
+docker container run \
+-it \
+--rm \
+--name=spiking-model-control-backend \
+-v "$(pwd)":/app \
+-p 5000:5000 \
+louisross/spiking-model-control-backend:1.0 \
+bash

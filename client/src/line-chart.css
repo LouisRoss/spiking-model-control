@@ -1,0 +1,13 @@
+.linechart {
+    width: 100%;
+    height:30px;
+}
+
+.linechart_path {
+    stroke-width: 1; /* Thick Line */
+    fill: none;      /* No Fill */
+}
+
+.linechart_axis {
+    stroke: #bdc3c7; /* Grey Axis Color */
+ }
