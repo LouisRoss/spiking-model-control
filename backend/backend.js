@@ -1,4 +1,5 @@
 const express = require('express');
+const createProxyMiddleware = require('http-proxy-middleware');
 const favicon = require('serve-favicon');
 const http = require('http');
 const bodyParser = require('body-parser');
@@ -22,10 +23,34 @@ app.use(cors());
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
+/*
+router: (req) => {
+  if (req.path === '/persist') {
+    return 'http://192.168.1.150:5000';
+  } else {
+    return 'http://192.168.1.3:5000';
+  }
+},
+
+const proxyMiddleware = createProxyMiddleware({
+  target: 'http://192.168.1.150:5000',
+  changeOrigin: true,
+  router: {
+    '/persist/**'                : 'http://192.168.1.150:5000'
+  },
+  pathrewrite: {
+    '^/persist' : '',
+  }
+});
+
+app.use(proxyMiddleware);
+*/
+
 const router = express.Router();
 
 router.get('/:command', (req, res) => {
   const { command } = req.params;
+  console.log(`backend received GET from resoure ${command}`);
 
   if (command == 'status') {
     var response = responder.handleStatusRequest()

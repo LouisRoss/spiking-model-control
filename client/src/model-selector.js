@@ -41,9 +41,13 @@ ManageStates() {
     case CommunicationState.GETDOMAINS1:
       this.requestResponseFromConfiguredStore((data) => {
         console.log(data);
-        this.restUrl = data.hrefs.find((href) => { return href.rel == 'root'; }).href;
-        console.log(this.restUrl);
-        this.communicationState = CommunicationState.GETDOMAINS2;
+        if (data.hrefs) {
+          this.restUrl = data.hrefs.find((href) => { return href.rel === 'root'; }).href;
+          console.log(this.restUrl);
+          this.communicationState = CommunicationState.GETDOMAINS2;
+        } else {
+          this.communicationState = CommunicationState.IDLE;
+        }
       });
       break;
       
@@ -72,6 +76,7 @@ ManageStates() {
       
     case CommunicationState.GOTDOMAINS:
     case CommunicationState.IDLE:
+    default:
       break;
   }
 }
@@ -86,10 +91,13 @@ ManageStates() {
       console.log(`request: ${init.body}`)  
     }  
     
-    const host = Configuration.persistenceUrl;
+    //const host = Configuration.persistenceUrl;
     const port = Configuration.persistencePort;
-    const url = 'http://' + host + ':' + port + '/';
-    
+    //const url = 'http://' + host + ':' + port + '/';
+    const protocol = window.location.protocol;
+    const host = window.location.hostname;
+    const url = protocol + '//' + host + ':' + port + '/';
+    console.log(`Requesting from: ${url}`);
     this.requestResponseFromUrl(init, url, callback);
   }
   
@@ -128,9 +136,14 @@ ManageStates() {
       method: 'PUT',
     };
               
-    const host = Configuration.persistenceUrl;
+    //const host = Configuration.persistenceUrl;
     const port = Configuration.persistencePort;
-    const url = 'http://' + host + ':' + port + '/?host=' + newmodel.value + '.' + this.restBaseDomain;
+    //const url = 'http://' + host + ':' + port + '/?host=' + newmodel.value + '.' + this.restBaseDomain;
+    const protocol = window.location.protocol;
+    const host = window.location.hostname;
+    const url = protocol + '//' + host + ':' + port + '/?host=' + newmodel.value + '.' + this.restBaseDomain;
+    console.log(`Requesting from: ${url}`);
+    //const url = 'http://localhost:5001/?host=' + newmodel.value + '.' + this.restBaseDomain;
     
     this.requestResponseFromUrl(init, url, (data) => {
       console.log(data);
@@ -156,6 +169,7 @@ ManageStates() {
             <form>
               <Button variant="btn btn-success" onClick={() => history.push('/')}>Model Selector</Button>
               <Button variant="btn btn-success" onClick={() => history.push('/ControlPanel')}>Control Panel</Button>
+              <Button variant="btn outline-primary" onClick={() => window.open("http://192.168.1.150:8080", '_blank')}>Monitor</Button>
             </form>
           </div>
 

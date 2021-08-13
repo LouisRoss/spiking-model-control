@@ -6,6 +6,8 @@ import history from './history.js';
 import ReactDOM from 'react-dom';
 import './App.css';
 
+/*
+*/
 
 class Selector extends Component {
   render() {
@@ -14,6 +16,7 @@ class Selector extends Component {
         <Router history = {history}>
           <Switch>
             <Route path="/" exact component={ModelSelector} />
+            <Route path="/persist" component={ModelSelector} />
             <Route path="/ControlPanel" component={ControlPanel} />
           </Switch>
         </Router>

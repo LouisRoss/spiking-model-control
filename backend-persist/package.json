@@ -1,12 +1,12 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "backend API for spiking model engine controller app",
-  "main": "backend.js",
+  "description": "backend persistence API for spiking model engine controller app",
+  "main": "backend-persist.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node -r dotenv/config backend.js",
-    "dev": "nodemon backend.js"
+    "start": "node backend-persist.js",
+    "dev": "nodemon backend-persist.js"
   },
   "author": "Louis Ross",
   "license": "MIT",
