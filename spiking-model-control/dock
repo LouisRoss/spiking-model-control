@@ -3,8 +3,7 @@ echo $(pwd)
 docker container run \
 -it \
 --rm \
---name=spiking-model-control-client \
--v "$(pwd)":/app \
+--name=spiking-model-control \
 -p 3000:3000 \
-louisross/spiking-model-control-client:1.0 \
+louisross/spiking-model-control:1.0 \
 bash
