@@ -1,10 +1,8 @@
 import { Component } from 'react';
-import history from './history.js';
 import { RestManager } from "./rest-manager";
 import { Button } from 'react-bootstrap';
 import { PropertySelect, AsyncConfigurationsSelect } from "./property-select.js";
 import { PropertySwitch, ConnectDisconnectButton } from "./property-switch.js";
-import ReactDOM from 'react-dom';
 import { LineChart } from './line-chart.js'
 import './App.css';
 
@@ -242,8 +240,8 @@ class ControlPanel extends Component {
             <span className="control">{(this.state.cpu * 100).toFixed(2)}</span>
           </div>
           <form>
-            <Button variant="btn btn-success" onClick={() => history.push('/')}>Model Selector</Button>
-            <Button variant="btn btn-success" onClick={() => history.push('/ControlPanel')}>Control Panel</Button>
+            <Button variant="btn btn-success" >Model Selector</Button>
+            <Button variant="btn btn-success" >Control Panel</Button>
           </form>
         </section>
       </section>
