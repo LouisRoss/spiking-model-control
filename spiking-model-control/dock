@@ -1,9 +1,0 @@
-#!/bin/bash
-echo $(pwd)
-docker container run \
--it \
---rm \
---name=spiking-model-control \
--p 3000:3000 \
-louisross/spiking-model-control:1.0 \
-bash

@@ -1,13 +1,19 @@
-FROM    node:latest
-LABEL   maintainer="Louis Ross <louis.ross@gmail.com"
+FROM node:16
 
-ARG     MYDIR=/home/spiking-model-control
+LABEL version="1.0"
+LABEL description="React-based Spiking Neural Network engine deployment and control."
+LABEL maintainer="Louis Ross <louis.ross@gmail.com"
 
-COPY    install-deps ${MYDIR}/
+WORKDIR /app
 
-RUN     echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-RUN     bash ${MYDIR}/install-deps ${MYDIR} >>install-deps.log
+COPY ["./package.json", "./package-lock.json", "/app/"]
 
-COPY ["./spiking-model-control/*", "./spiking-model-control/"]
+RUN ls
+#RUN npm install --production
+RUN ["npm", "install"]
 
-CMD     ["bash"]
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

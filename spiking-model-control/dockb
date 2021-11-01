@@ -1,2 +1,0 @@
-#!/bin/bash
-docker image build -t louisross/spiking-model-control-client:1.0 .

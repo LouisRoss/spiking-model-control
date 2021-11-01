@@ -1,5 +1,0 @@
-#!/bin/bash
-
-mkdir -p ./include
-touch ./include/install.txt
-
