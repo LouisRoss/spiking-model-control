@@ -9,19 +9,20 @@ section.mainbody {
     background: white;
     color: gray;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     padding: 0;
     padding: 0;
 }
 
-section.fullpane {
+section.toppane {
+    background: white;
+    color: gray;
     display: flex;
-    flex-direction: column;
-    width: 98%;
-    margin: 0 1px 0 0;
-    border-style: solid;
-    border-width: 1px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0;
+    padding: 0;
 }
 
 section.leftpane {
@@ -38,7 +39,7 @@ section.rightpane {
     display: flex;
     flex-direction: column;
     width: 29%;
-    height: 550px;
+    height: 673px;
     margin: 0 0 0 1px;
     border-style: solid;
     border-width: 1px;
@@ -49,6 +50,37 @@ div.connectbar {
     font-size: 14pt;
     text-align: center;
     margin: 0 0 0 15px;
+}
+
+div.workingpanel {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    margin: 0 1px 0 0;
+    border-style: solid;
+    border-width: 1px;
+}
+
+div.statuspanel {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin: 0 1px 0 0;
+    border-style: solid;
+    border-width: 1px;
+    width: 100%;
+}
+
+div.messages {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin: 5px 0 0 0;
+}
+
+div.deployment-manager {
+    margin: 5px 0 0 2px;
+    width: 442px;
 }
 
 div.messagebar {
@@ -133,11 +165,6 @@ div.stripchartbar {
 
 span.loglevel {
     width: 180px;
-}
-
-div.messages {
-    margin: auto;
-    width: 98%;
 }
 
 #messages { 
