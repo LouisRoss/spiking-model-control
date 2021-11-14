@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PropertySelect, AsyncConfigurationsSelect } from "./property-select.js";
 import { PropertySwitch } from "./property-switch.js";
 import './App.css';
@@ -48,24 +48,24 @@ const StatusAndControlPanel = ({ restManager, registerUpdateFunc }) => {
     cpu: 0
   });
 
-  useEffect(() => {
-    registerUpdateFunc(distributStatusResonse);
-  }, [registerUpdateFunc]);
-
-  const distributStatusResonse = (data) => {
+  const memoizedDistributStatusResonse = useCallback((data) => {
     if (typeof data.status !== 'undefined')
     {
       setEngineStatus({...engineStatus, ...data.status});
       //console.log(engineStatus);
     }
-  }
-  
+  }, [engineStatus]);
+
+  useEffect(() => {
+    registerUpdateFunc(memoizedDistributStatusResonse);
+  }, [registerUpdateFunc, memoizedDistributStatusResonse]);
+
   const sendSwitchChangeCommand = (values) => {
     var switchChangeReq = { request: 'passthrough', packet: { query: 'control', values: values } };
 
     restManager.PassthroughRequestResponse(switchChangeReq, (data) => {
       console.log(`Switch change response: ${JSON.stringify(data)}`);
-      distributStatusResonse(data);
+      memoizedDistributStatusResonse(data);
     });  
   }  
 

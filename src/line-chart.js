@@ -9,22 +9,22 @@ const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
   }, [registerUpdateFunc]);
 
   // GET MAX & MIN X
-  const getMinX = () => {
-    return 0;
-  }
+//  const getMinX = () => {
+//    return 0;
+//  }
 
   const getMaxX = () => {
     return data.length - 1;
   }
 
   // GET MAX & MIN Y
-  const getMinY = () => {
-    return data.reduce((min, p) => p < min ? p : min, data[0]);
-  }
+//  const getMinY = () => {
+//    return data.reduce((min, p) => p < min ? p : min, data[0]);
+//  }
 
-  const getMaxY = () => {
-    return data.reduce((max, p) => p > max ? p : max, data[0]);
-  }
+//  const getMaxY = () => {
+//    return data.reduce((max, p) => p > max ? p : max, data[0]);
+//  }
 
   const getSvgX = (x, maxX) => {
     return (x / maxX * svgWidth);
@@ -36,18 +36,23 @@ const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
 
 
   const makePath = () => {
-    const maxX = getMaxX();
+    let pathD = "M 0 0 ";
+
+    if (data.length > 0) {
+      const maxX = getMaxX();
+
+      pathD = "M " + getSvgX(0, maxX) + " " + getSvgY(data[0]) + " ";
+      pathD += data.map((point, i) => {
+        return "L " + getSvgX(i, maxX) + " " + getSvgY(point) + " ";
+      });
+    }
     
-    let pathD = "M " + getSvgX(0, maxX) + " " + getSvgY(data[0]) + " ";
-    pathD += data.map((point, i) => {
-      return "L " + getSvgX(i, maxX) + " " + getSvgY(point) + " ";
-    });
 
     return (
       <path className="linechart_path" d={pathD} strokeWidth='1' style={{stroke: color}} />
     );
   }
-
+/*
   const makeAxis = () => {
     const minX = getMinX(), maxX = getMaxX();
     const minY = getMinY(), maxY = getMaxY();
@@ -63,7 +68,7 @@ const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
       </g>
     );
   }
-  
+*/  
 
   return (
     <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
