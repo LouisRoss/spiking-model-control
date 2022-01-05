@@ -71,6 +71,22 @@ div.statuspanel {
     width: 100%;
 }
 
+div.deploymentcontrol {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0 1px 0 0;
+    width: 100%;
+}
+
+div.deployments-manager {
+    margin: 0 12px 0 0;
+    display: flex;
+    flex-direction:row;
+    flex-wrap: wrap;
+    justify-content:flex-start;
+}
+
 div.deploymentpanel {
     display: flex;
     flex-direction: row;
@@ -81,19 +97,30 @@ div.deploymentpanel {
     width: 100%;
 }
 
+div.deploymentbuttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin: 0 1px 0 0;
+    border-style:none;
+    width: 100px;
+}
+
+div.deployedengines {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    margin: 0 1px 0 0;
+    border-style:none;
+    width: 200px;
+}
+
 div.messages {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     margin: 5px 0 0 0;
-}
-
-div.deployments-manager {
-    margin: 0 12px 0 0;
-    display: flex;
-    flex-direction:row;
-    flex-wrap: wrap;
-    justify-content:flex-start;
 }
 
 /* The deployments management */

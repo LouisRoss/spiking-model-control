@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { RestManager } from "./rest-manager";
 import { StatusAndControlPanel } from './status-control.js';
 import { ConnectDisconnectButton } from './property-switch.js';
@@ -12,18 +13,20 @@ const basePackagerUrl = configuration.services.modelPackager.host + ':' + config
 
 var restManager = RestManager.getInstance();
 
-// TODO - get from URL.
-var selectedModel = 'layer';
-
 const ControlPanel = () => {
+  const { model } = useParams();
   const [cpuhistory, setCpuhistory] = useState([]);
   const [connected, setConnected] = useState(false);
+  const [deploymentSelected, setDeploymentSelected] = useState(false);
+  const [deployedEngines, setDeployedEngines] = useState([]);
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     setCpuhistory(new Array(200).fill(0));
-  }, []);
-
+    var messages = document.getElementById('messages');
+    messages.value += '\nDeploying model ' + model + '\n';
+}, []);
+/*
   useEffect(() => {
     const timerId = setInterval(statusPoll, 500);
     return () => {
@@ -44,7 +47,7 @@ const ControlPanel = () => {
       }
     });
   }
-
+*/
   // Provided by StatusAndControlPanel component.
   var handleStatusControlUpdate = (engineStatus) => null;
 
@@ -86,17 +89,19 @@ const ControlPanel = () => {
     messages.value += `Changed to deployment '${deploymentName}'\n`
 
     if (deploymentName.length === 0) {
+      setDeploymentSelected(false);
       if (handleDeploymentUpdate) {
         handleDeploymentUpdate('', []);
       }
       return;
     }
 
-    fetch(basePackagerUrl + '/model/' + selectedModel + '/deployment/' + deploymentName, { method: 'GET', mode: 'cors' })
+    setDeploymentSelected(true);
+    fetch(basePackagerUrl + '/model/' + model + '/deployment/' + deploymentName, { method: 'GET', mode: 'cors' })
     .then(data => data.json())
     .then(response => {
       if (messages) {
-        messages.value += `Retrieved deployment '${deploymentName}' for model '${selectedModel}'\n`
+        messages.value += `Retrieved deployment '${deploymentName}' for model '${model}'\n`
       }
       if (handleDeploymentUpdate) {
         handleDeploymentUpdate(deploymentName, response);
@@ -110,7 +115,7 @@ const ControlPanel = () => {
     const editedDeployment = getEditedDeployment();
     messages.value += `Saving edited deployment '${editedDeployment.deploymentName}'\n`
 
-    fetch(basePackagerUrl + '/model/' + selectedModel + '/deployment/' + editedDeployment.deploymentName, {
+    fetch(basePackagerUrl + '/model/' + model + '/deployment/' + editedDeployment.deploymentName, {
       method: 'PUT', 
       headers: {
         'Content-Type': 'application/json'
@@ -121,10 +126,38 @@ const ControlPanel = () => {
     .then(data => data.json())
     .then(response => {
       if (messages) {
-        messages.value += `Saved deployment '${editedDeployment.deploymentName}' for model '${selectedModel}'\n`
+        messages.value += `Saved deployment '${editedDeployment.deploymentName}' for model '${model}'\n`
       }
       setDirty(false);
     });
+  }
+
+  const handleDeployClick = () => {
+    if (document.getElementById('deploymentsselectlist').selectedIndex === -1) {
+      return;
+    }
+
+    const deploymentName = document.getElementById('deploymentsselectlist').value;
+    const engines = getEditedDeployment().engines;
+
+    const distinctEngines = [...new Set(engines)];
+    distinctEngines.forEach(engine => {
+      restManager.Deploy(model, deploymentName, engine, (data) => {
+        console.log(`Deploy response: ${JSON.stringify(data)}`);
+      });
+    });
+
+    setDeployedEngines(distinctEngines);
+  }
+
+  const handleUndeployClick = () => {
+    deployedEngines.forEach(engine => {
+      restManager.Undeploy(engine, (data) => {
+        console.log(`Undeploy response: ${JSON.stringify(data)}`);
+      });
+    });
+
+    setDeployedEngines([]);
   }
 
   const memoizedDirtyFlag = useCallback((dirty) => setDirty(dirty), []);
@@ -145,10 +178,21 @@ const ControlPanel = () => {
 
             <div className="workingpanel">
               <div className="statuspanel">
-                <div className="deploymentpanel">
-                  <DeploymentsManager selectedModel={'layer'} onChangeHandler={handleDeploymentChange}/>
-                  <DeploymentManager selectedModel={'layer'} registerUpdateFunc = {(updateHandler) => handleDeploymentUpdate = updateHandler} registerGetDeploymentFunc = {(getDeployment) => getEditedDeployment = getDeployment} dirtyFlag = {memoizedDirtyFlag} />
-                  <ConnectDisconnectButton value="Apply" disabled={() => !dirty} onClick={handleApplyClick}/>
+                <div className='deploymentcontrol'>
+                  <div className="deploymentpanel">
+                    <DeploymentsManager selectedModel={model} onChangeHandler={handleDeploymentChange}/>
+                    <DeploymentManager selectedModel={model} registerUpdateFunc = {(updateHandler) => handleDeploymentUpdate = updateHandler} registerGetDeploymentFunc = {(getDeployment) => getEditedDeployment = getDeployment} dirtyFlag = {memoizedDirtyFlag} />
+                    <div className="deploymentbuttons">
+                      <ConnectDisconnectButton value="Apply" disabled={() => !dirty} onClick={handleApplyClick}/>
+                      <ConnectDisconnectButton value="Deploy" disabled={() => deployedEngines.length !== 0 || !deploymentSelected || dirty} onClick={handleDeployClick}/>
+                      <ConnectDisconnectButton value="Undeploy" disabled={() => deployedEngines.length === 0} onClick={handleUndeployClick}/>
+                    </div>
+                  </div>
+                  <div className='deployedengines'>
+                  {deployedEngines.map(engine => (
+                    <div key="{engine}">{engine}</div>
+                  ))}
+                  </div>
                 </div>
                 <div className="messages">
                   <textarea name="messages" id="messages" cols="120" rows="12" readOnly></textarea>

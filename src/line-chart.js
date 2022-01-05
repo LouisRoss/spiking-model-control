@@ -38,7 +38,7 @@ const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
   const makePath = () => {
     let pathD = "M 0 0 ";
 
-    if (data.length > 0) {
+    if (data && data.length > 0) {
       const maxX = getMaxX();
 
       pathD = "M " + getSvgX(0, maxX) + " " + getSvgY(data[0]) + " ";
