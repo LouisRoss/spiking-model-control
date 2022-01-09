@@ -27,47 +27,11 @@ const ControlPanel = () => {
     setCpuhistory(new Array(200).fill(0));
     var messages = document.getElementById('messages');
     messages.value += '\nDeploying model ' + model + '\n';
-}, []);
-/*
-  useEffect(() => {
-    const timerId = setInterval(statusPoll, 500);
-    return () => {
-      clearInterval(timerId);
-    }
-  });
-
-  const statusPoll = () => {
-    restManager.StatusRequestResponse(data => {
-      setConnected(data.response.status.connected);
-      distributStatusResonse(data.response)
-      if (handleStatusControlUpdate) {
-        handleStatusControlUpdate(data.response);
-      }
-
-      if (handleCpuChartUpdate) {
-        handleCpuChartUpdate(data.response.status.cpuhistory);
-      }
-    });
-  }
-*/
-  // Provided by StatusAndControlPanel component.
-  var handleStatusControlUpdate = (engineStatus) => null;
-
-  // Provided by LineChart component.
-  var handleCpuChartUpdate = (cpuhistory) => null;
+  }, []);
 
   // Provided by DeploymentManager component.
   var handleDeploymentUpdate = (deployment) => null;
   var getEditedDeployment = (deployment) => null;
-
-  const distributStatusResonse = data => {
-    var status = document.getElementById('status');
-    //status.value = JSON.stringify(data);
-    
-    if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
-      status.value = `Error: ${data.error} - ${data.errordetail}`
-    }
-  }
 
   const handleDeploymentChange = (deploymentName) => {
     const messages = document.getElementById('messages');
@@ -156,15 +120,6 @@ const ControlPanel = () => {
 
   const memoizedDirtyFlag = useCallback((dirty) => setDirty(dirty), []);
 
-  /*
-                  {deployedEngines.map(engine => (
-                  <div key={engine} className='deployedengines'>
-                    <label>
-                      <input type="radio" value={engine} name="deployedengines" /> {engine}
-                    </label>
-                  </div>
-                  ))}
-  */
   return (
     <section className="mainbody">
       <section className="toppane">
