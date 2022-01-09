@@ -141,7 +141,7 @@ const DeploymentsManager = ({selectedModel, onChangeHandler}) => {
   return (
     <div className="deployments-manager">
       <div className="deployments-management">
-        <label>Deployments</label>
+        <label>Deployments for model '{selectedModel}'</label>
         <div className="deployment-group" id="deployment-group">
           <div className="deployment-controls">
             <ConnectDisconnectButton ident="createbutton" value="Create" disabled={() => createButtonDisabled} onClick={handleCreateButtonClick}/>

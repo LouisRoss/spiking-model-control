@@ -1,14 +1,9 @@
 import {useState, useEffect} from "react"
 import "./line-chart.css"
 
-const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
-  const [data, setData] = useState([]);
+const LineChart = ({svgHeight, svgWidth, color, data}) => {
 
-  useEffect(() => {
-    registerUpdateFunc(dataArray => setData(dataArray));
-  }, [registerUpdateFunc]);
-
-  // GET MAX & MIN X
+// GET MAX & MIN X
 //  const getMinX = () => {
 //    return 0;
 //  }
@@ -17,7 +12,7 @@ const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
     return data.length - 1;
   }
 
-  // GET MAX & MIN Y
+// GET MAX & MIN Y
 //  const getMinY = () => {
 //    return data.reduce((min, p) => p < min ? p : min, data[0]);
 //  }
@@ -72,7 +67,7 @@ const LineChart = ({svgHeight, svgWidth, color, registerUpdateFunc}) => {
 
   return (
     <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
-    {makePath(svgHeight)}
+    {makePath()}
     {/*makeAxis()*/}
     </svg>
   );

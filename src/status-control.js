@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { PropertySelect, AsyncConfigurationsSelect } from "./property-select.js";
 import { PropertySwitch } from "./property-switch.js";
 import './App.css';
+import configuration from './configfiles/configuration.json';
+
+const baseControlConnectorWsUrl = configuration.services.controlConnector.host + ':' + configuration.services.controlConnector.wsport;
 
 const logLevels = [
   { value: 0, label: 'None' },
@@ -29,7 +32,7 @@ const enginePeriods = [
 ];
 
 // The exported component.
-const StatusAndControlPanel = ({ restManager, registerUpdateFunc }) => {
+const StatusAndControlPanel = ({ restManager, handleCpuHistory, engine }) => {
   const [engineStatus, setEngineStatus] = useState({ 
     connected: false, 
     run: false,
@@ -48,6 +51,30 @@ const StatusAndControlPanel = ({ restManager, registerUpdateFunc }) => {
     cpu: 0
   });
 
+  const [initialized, setInitialized] = useState(false);
+  const socket = useRef(null);
+
+  useEffect(() => {
+    socket.current = new WebSocket('ws://' + baseControlConnectorWsUrl);
+    socket.current.onopen = function () {
+      console.log(`Opened websocket with ws://${baseControlConnectorWsUrl}`);
+      setInitialized(true);
+    };
+
+    socket.current.onmessage = function (message) {
+      //console.log(`Received websocket message ${message.data}`);
+      const data = JSON.parse(message.data);
+      setEngineStatus({...engineStatus, ...data});
+      handleCpuHistory(data.cpuhistory);
+      //console.log(engineStatus);
+    };
+
+    socket.current.onerror = function (error) {
+        console.log('WebSocket error: ' + error);
+    };
+  }, []);
+
+
   const memoizedDistributStatusResonse = useCallback((data) => {
     if (typeof data.status !== 'undefined')
     {
@@ -56,14 +83,14 @@ const StatusAndControlPanel = ({ restManager, registerUpdateFunc }) => {
     }
   }, [engineStatus]);
 
-  useEffect(() => {
-    registerUpdateFunc(memoizedDistributStatusResonse);
-  }, [registerUpdateFunc, memoizedDistributStatusResonse]);
+//  useEffect(() => {
+//    registerUpdateFunc(memoizedDistributStatusResonse);
+//  }, [registerUpdateFunc, memoizedDistributStatusResonse]);
 
   const sendSwitchChangeCommand = (values) => {
-    var switchChangeReq = { request: 'passthrough', packet: { query: 'control', values: values } };
+    var switchChangeReq = { query: 'control', values: values };
 
-    restManager.PassthroughRequestResponse(switchChangeReq, (data) => {
+    restManager.PassthroughRequestResponse(engine, switchChangeReq, (data) => {
       console.log(`Switch change response: ${JSON.stringify(data)}`);
       memoizedDistributStatusResonse(data);
     });  

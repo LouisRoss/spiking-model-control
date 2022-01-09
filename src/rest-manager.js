@@ -1,5 +1,5 @@
 import configuration from './configfiles/configuration.json';
-const baseControlConnectorUrl = configuration.services.controlConnector.host + ':' + configuration.services.controlConnector.port;
+const baseControlConnectorUrl = 'http://' + configuration.services.controlConnector.host + ':' + configuration.services.controlConnector.port;
 
 class PrivateSingleton {
 
@@ -43,6 +43,14 @@ class PrivateSingleton {
       this.ConnectionRequestResponse(engine, { query: 'disconnect' }, (dummy) => callback(response));
     });
   }
+
+  SetSelectedEngine(engine, callback) {
+    var init = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', },
+     };
+     this.RequestResponse('engine/' + engine + '/select', init, callback);
+   }
 
   PassthroughRequestResponse(engine, request, callback) {
    var init = {

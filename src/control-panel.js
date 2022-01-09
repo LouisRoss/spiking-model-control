@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { RadioGroup, RadioButton } from 'react-radio-buttons';
 import { useParams } from 'react-router-dom';
 import { RestManager } from "./rest-manager";
 import { StatusAndControlPanel } from './status-control.js';
@@ -19,6 +20,7 @@ const ControlPanel = () => {
   const [connected, setConnected] = useState(false);
   const [deploymentSelected, setDeploymentSelected] = useState(false);
   const [deployedEngines, setDeployedEngines] = useState([]);
+  const [selectedEngine, setSelectedEngine] = useState('');
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
@@ -65,23 +67,6 @@ const ControlPanel = () => {
     if (typeof data.error !== 'undefined' && data.error != null && typeof data.errordetail !== 'undefined') {
       status.value = `Error: ${data.error} - ${data.errordetail}`
     }
-  }
-
-  const handleConnectionClick = (connect) => {
-    var servers = document.getElementById('servers');
-    
-    let connectReq;
-    if (connect) {
-      connectReq = { 'request': 'connect', 'server': servers.value };
-    } else {
-      connectReq = { 'request': 'disconnect', 'server': '' };
-    }
-
-    restManager.ConnectionRequestResponse(connectReq, (data) => {
-      var messages = document.getElementById('messages');
-      messages.value += '\n' + JSON.stringify(data);
-      window.scrollTo(0, document.body.scrollHeight);
-    });
   }
 
   const handleDeploymentChange = (deploymentName) => {
@@ -147,6 +132,7 @@ const ControlPanel = () => {
       });
     });
 
+    handleSelectedEngineChange(distinctEngines[0]);
     setDeployedEngines(distinctEngines);
   }
 
@@ -160,21 +146,30 @@ const ControlPanel = () => {
     setDeployedEngines([]);
   }
 
+  const handleSelectedEngineChange = (engine) => {
+    restManager.SetSelectedEngine(engine, (data) => {
+      console.log(`Select engine response: ${JSON.stringify(data)}`);
+    });
+
+    setSelectedEngine(engine);
+  }
+
   const memoizedDirtyFlag = useCallback((dirty) => setDirty(dirty), []);
 
+  /*
+                  {deployedEngines.map(engine => (
+                  <div key={engine} className='deployedengines'>
+                    <label>
+                      <input type="radio" value={engine} name="deployedengines" /> {engine}
+                    </label>
+                  </div>
+                  ))}
+  */
   return (
     <section className="mainbody">
       <section className="toppane">
         <section className="leftpane">
           <div className="connectbar">
-            <div id="connectionPanel">
-              <ConnectDisconnectButton ident="connectButton" value="Connnect" disabled={() => connected} onClick={() => handleConnectionClick(true)}/>
-              <select name="servers" id="servers">
-                <option value="192.168.1.142">192.168.1.142</option>
-                <option value="127.0.0.1">127.0.0.1</option>
-              </select>
-              <ConnectDisconnectButton ident="connectButton" value="Disconnnect" disabled={() => !connected} onClick={() => handleConnectionClick(false)}/>
-            </div>
 
             <div className="workingpanel">
               <div className="statuspanel">
@@ -188,11 +183,13 @@ const ControlPanel = () => {
                       <ConnectDisconnectButton value="Undeploy" disabled={() => deployedEngines.length === 0} onClick={handleUndeployClick}/>
                     </div>
                   </div>
-                  <div className='deployedengines'>
-                  {deployedEngines.map(engine => (
-                    <div key="{engine}">{engine}</div>
-                  ))}
-                  </div>
+                  <RadioGroup onChange={handleSelectedEngineChange} value={deployedEngines[0]} >
+                    {deployedEngines.map(engine => (
+                      <RadioButton key={engine} value={engine}>
+                        {engine}
+                      </RadioButton>
+                    ))}
+                  </RadioGroup>                  
                 </div>
                 <div className="messages">
                   <textarea name="messages" id="messages" cols="120" rows="12" readOnly></textarea>
@@ -202,11 +199,11 @@ const ControlPanel = () => {
             </div>
           </div>
         </section>
-        <StatusAndControlPanel restManager={restManager} registerUpdateFunc = {(updateHandler) => handleStatusControlUpdate = updateHandler} />
+        <StatusAndControlPanel restManager={restManager} handleCpuHistory = {(data) => setCpuhistory(data)} engine={selectedEngine} />
       </section>
       <div className="stripchartbar">
         <div className="header">% CPU</div>
-        <LineChart svgHeight="40" svgWidth="400" data={cpuhistory} color='#333333' registerUpdateFunc = {(updateHandler) => handleCpuChartUpdate = updateHandler} />
+        <LineChart svgHeight="40" svgWidth="400" color='#333333' data={cpuhistory} />
       </div>
     </section>
   );
