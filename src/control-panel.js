@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { RadioGroup, RadioButton } from 'react-radio-buttons';
 import { useParams } from 'react-router-dom';
 import { RestManager } from "./rest-manager";
@@ -16,46 +16,20 @@ var restManager = RestManager.getInstance();
 
 const ControlPanel = () => {
   const { model } = useParams();
-  const [cpuhistory, setCpuhistory] = useState([]);
-  const [connected, setConnected] = useState(false);
-  const [deploymentSelected, setDeploymentSelected] = useState(false);
+  const [cpuhistory, setCpuhistory] = useState(new Array(200).fill(0));
+  const [selectedDeployment, setSelectedDeployment] = useState('');
   const [deployedEngines, setDeployedEngines] = useState([]);
   const [selectedEngine, setSelectedEngine] = useState('');
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => {
-    setCpuhistory(new Array(200).fill(0));
-    var messages = document.getElementById('messages');
-    messages.value += '\nDeploying model ' + model + '\n';
-  }, []);
-
   // Provided by DeploymentManager component.
-  var handleDeploymentUpdate = (deployment) => null;
   var getEditedDeployment = (deployment) => null;
 
   const handleDeploymentChange = (deploymentName) => {
     const messages = document.getElementById('messages');
     messages.value += `Changed to deployment '${deploymentName}'\n`
 
-    if (deploymentName.length === 0) {
-      setDeploymentSelected(false);
-      if (handleDeploymentUpdate) {
-        handleDeploymentUpdate('', []);
-      }
-      return;
-    }
-
-    setDeploymentSelected(true);
-    fetch(basePackagerUrl + '/model/' + model + '/deployment/' + deploymentName, { method: 'GET', mode: 'cors' })
-    .then(data => data.json())
-    .then(response => {
-      if (messages) {
-        messages.value += `Retrieved deployment '${deploymentName}' for model '${model}'\n`
-      }
-      if (handleDeploymentUpdate) {
-        handleDeploymentUpdate(deploymentName, response);
-      }
-    });
+    setSelectedDeployment(deploymentName);
   }
 
   const handleApplyClick = () => {
@@ -131,10 +105,10 @@ const ControlPanel = () => {
                 <div className='deploymentcontrol'>
                   <div className="deploymentpanel">
                     <DeploymentsManager selectedModel={model} onChangeHandler={handleDeploymentChange}/>
-                    <DeploymentManager selectedModel={model} registerUpdateFunc = {(updateHandler) => handleDeploymentUpdate = updateHandler} registerGetDeploymentFunc = {(getDeployment) => getEditedDeployment = getDeployment} dirtyFlag = {memoizedDirtyFlag} />
+                    <DeploymentManager selectedModel={model} registerGetDeploymentFunc = {(getDeployment) => getEditedDeployment = getDeployment} dirtyFlag = {memoizedDirtyFlag} deploymentName = {selectedDeployment} />
                     <div className="deploymentbuttons">
                       <ConnectDisconnectButton value="Apply" disabled={() => !dirty} onClick={handleApplyClick}/>
-                      <ConnectDisconnectButton value="Deploy" disabled={() => deployedEngines.length !== 0 || !deploymentSelected || dirty} onClick={handleDeployClick}/>
+                      <ConnectDisconnectButton value="Deploy" disabled={() => deployedEngines.length !== 0 || selectedDeployment.length === 0 || dirty} onClick={handleDeployClick}/>
                       <ConnectDisconnectButton value="Undeploy" disabled={() => deployedEngines.length === 0} onClick={handleUndeployClick}/>
                     </div>
                   </div>

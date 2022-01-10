@@ -55,10 +55,10 @@ function getColumns(engineServers, handlEngineChange) {
   ];
 }
 
-var deploymentName = '';
+//var deploymentName = '';
 
 
-const DeploymentManager = ({selectedModel, registerUpdateFunc, registerGetDeploymentFunc, dirtyFlag}) => {
+const DeploymentManager = ({selectedModel, registerGetDeploymentFunc, dirtyFlag, deploymentName}) => {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(() => new Set());
   const [engineChanged, setEngineChanged] = useState(false);
@@ -79,24 +79,35 @@ const DeploymentManager = ({selectedModel, registerUpdateFunc, registerGetDeploy
     }
   }, [selectedModel, dirtyFlag]);
 
+  // NOTE - We must change the rows state here with a new instance in order to
+  //        trigger ReactDataGrid to repaint the rows.  This means we cannot
+  //        list rows as a dependency here, since it will cause a recursive trigger.
   useEffect(() => {
-    registerUpdateFunc((deployment, data) => {
-      deploymentName = deployment;
+    const messages = document.getElementById('messages');
 
-      // We need an actual deep copy here!!
-      var newRows = [];
-      rows.forEach((row, index) => 
-        newRows.push({
-          'id': row['id'], 
-          'population': row['population'], 
-          'template': row['template'], 
-          'engine': index < data.length ? data[index] : ''
-        })
-      );
+    if (deploymentName.length !== 0) {
+      fetch(basePackagerUrl + '/model/' + selectedModel + '/deployment/' + deploymentName, { method: 'GET', mode: 'cors' })
+      .then(data => data.json())
+      .then(response => {
+        if (messages) {
+          messages.value += `Retrieved deployment '${deploymentName}' for model '${selectedModel}'\n`
+        }
 
-      setRows(newRows);
-    });
-  }, [registerUpdateFunc, rows]);
+        // We need an actual deep copy here!!
+        var newRows = [];
+        rows.forEach((row, index) => 
+          newRows.push({
+            'id': row['id'], 
+            'population': row['population'], 
+            'template': row['template'], 
+            'engine': index < response.length ? response[index] : ''
+          })
+        );
+
+        setRows(newRows);
+      });
+    }
+  }, [selectedModel, deploymentName]);
 
   useEffect(() => {
     registerGetDeploymentFunc(() => {
@@ -104,7 +115,7 @@ const DeploymentManager = ({selectedModel, registerUpdateFunc, registerGetDeploy
       rows.forEach(row => engines.push(row.engine));
       return {deploymentName, engines};
     });
-  }, [registerGetDeploymentFunc, rows]);
+  }, [registerGetDeploymentFunc, deploymentName, rows]);
 
   useEffect(() => {
     if (engineChanged) {

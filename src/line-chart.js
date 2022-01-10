@@ -1,4 +1,3 @@
-import {useState, useEffect} from "react"
 import "./line-chart.css"
 
 const LineChart = ({svgHeight, svgWidth, color, data}) => {

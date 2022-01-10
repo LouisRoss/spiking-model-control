@@ -51,14 +51,15 @@ const StatusAndControlPanel = ({ restManager, handleCpuHistory, engine }) => {
     cpu: 0
   });
 
-  const [initialized, setInitialized] = useState(false);
   const socket = useRef(null);
 
+  // NOTE - The linter recommends setting dependencies on engineStatus and
+  //        handleCpuHistory, but doing so causes an infinite tight loop.
+  //        Not doing that.
   useEffect(() => {
     socket.current = new WebSocket('ws://' + baseControlConnectorWsUrl);
     socket.current.onopen = function () {
       console.log(`Opened websocket with ws://${baseControlConnectorWsUrl}`);
-      setInitialized(true);
     };
 
     socket.current.onmessage = function (message) {
