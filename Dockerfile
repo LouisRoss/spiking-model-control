@@ -6,14 +6,14 @@ LABEL maintainer="Louis Ross <louis.ross@gmail.com"
 
 WORKDIR /app
 
-#COPY ["./package.json", "./package-lock.json", "/app/"]
+COPY ["./package.json", "./package-lock.json", "/app/"]
 
 RUN ls
 #RUN npm install --production
-#RUN ["npm", "install"]
+RUN ["npm", "install"]
 
 COPY . .
 
-#EXPOSE 3000
+EXPOSE 3000
 
-CMD ["bash"]
+CMD ["npm", "start"]
