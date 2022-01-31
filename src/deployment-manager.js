@@ -72,9 +72,11 @@ const DeploymentManager = ({selectedModel, registerGetDeploymentFunc, dirtyFlag,
         if (messages) {
           messages.value += `Retrieved configured populations for model '${selectedModel}'\n`
         }
-        response.templates.forEach((value, index) => { value.id = index; value.engine = ''; });
-        setRows(response.templates);
-        dirtyFlag(false);
+        if (response.templates) {
+          response.templates.forEach((value, index) => { value.id = index; value.engine = ''; });
+          setRows(response.templates);
+          dirtyFlag(false);
+        }
       });
     }
   }, [selectedModel, dirtyFlag]);
