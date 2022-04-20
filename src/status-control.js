@@ -39,6 +39,7 @@ const StatusAndControlPanel = ({ restManager, handleCpuHistory, engine }) => {
     pause: false,
     controlfile: '',
     recordenable: false,
+    recordsynapses: false,
     logenable: false,
     engineinit: false,
     enginefail: false,
@@ -147,7 +148,8 @@ const StatusAndControlPanel = ({ restManager, handleCpuHistory, engine }) => {
 
       <hr />
 
-      <PropertySwitch onChange={(checked) => sendSwitchChangeCommand({ recordenable: checked })} isChecked={() => engineStatus.recordenable} value="Recording"  label='' connected={engineStatus.connected} />
+      <PropertySwitch onChange={(checked) => sendSwitchChangeCommand(checked ? { recordenable: true } : { recordenable: false, recordsynapses: false })} isChecked={() => engineStatus.recordenable} value="Recording"  label='' connected={engineStatus.connected} />
+      <PropertySwitch onChange={(checked) => sendSwitchChangeCommand({ recordsynapses: checked })} isChecked={() => engineStatus.recordsynapses} value="Record Synapses"  label='' connected={engineStatus.connected && engineStatus.recordenable} />
       <div className="property-switch">
         <span className="control-label">Record File</span>
         <span className="control-value">{engineStatus.recordfile}</span>
